@@ -12,6 +12,7 @@ mod tests;
 pub struct DawApp {
     ctx: Option<AudioContext>,
     // States
+    guitar_state: core_state::GuitarState,
     settings: core_state::Settings,
 
     // UI
@@ -23,6 +24,7 @@ impl Default for DawApp {
     fn default() -> Self {
         Self { 
             ctx: None,
+            guitar_state: core_state::GuitarState::new(),
             settings: core_state::Settings::new(),
 
         }
@@ -34,7 +36,7 @@ impl eframe::App for DawApp {
         gui::header::show(ctx);
 
         egui::SidePanel::left("left_panel").show(ctx, |ui| {
-            gui::sidebar::show(ui, &mut self.settings);
+            gui::sidebar::show(ui, &mut self.guitar_state, &mut self.settings);
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {

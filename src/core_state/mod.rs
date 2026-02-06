@@ -7,4 +7,8 @@ pub use music_theory::ScaleType;
 pub use music_theory::ChordType;
 pub use music_theory::Note;
 
+pub use guitar::Tuning;
+pub use guitar::GuitarConfig;
+pub use guitar::GuitarState;
+
 pub use settings::Settings;

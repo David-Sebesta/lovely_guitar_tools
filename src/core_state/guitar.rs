@@ -1,5 +1,4 @@
-use std::ops::Index;
-
+use std::{collections::HashMap, ops::Index};
 use super::music_theory::{Note, NoteName};
 
 
@@ -132,5 +131,18 @@ impl GuitarConfig {
 }
 
 
+pub struct GuitarState {
+    pub config: GuitarConfig,
+    pub active_frets: HashMap<u8, u8>, // String to fret
+}
+
+impl GuitarState {
+    pub fn new() -> Self {
+        Self {
+            config: GuitarConfig::standard_6_string(),
+            active_frets: HashMap::new(),
+        }
+    }
+}
 
 
