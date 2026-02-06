@@ -134,6 +134,7 @@ impl GuitarConfig {
 pub struct GuitarState {
     pub config: GuitarConfig,
     pub active_frets: HashMap<u8, u8>, // String to fret
+    pub active_note: Option<Note>,
 }
 
 impl GuitarState {
@@ -141,6 +142,7 @@ impl GuitarState {
         Self {
             config: GuitarConfig::standard_6_string(),
             active_frets: HashMap::new(),
+            active_note: Option::None,
         }
     }
 }

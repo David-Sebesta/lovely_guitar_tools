@@ -1,6 +1,7 @@
 use eframe::egui;
 use wasm_bindgen::prelude::*;
 use web_sys::{AudioContext, OscillatorType};
+use console_log;
 
 pub mod core_state;
 mod gui;
@@ -48,6 +49,8 @@ impl eframe::App for DawApp {
 
             ui.separator();
 
+            gui::fretboard::show(ui, &mut self.guitar_state, &self.settings);
+
         });
     }
 }
@@ -59,10 +62,10 @@ impl DawApp {
             self.ctx = Some(AudioContext::new().unwrap());
         }
         
-        if let Some(ref audio_ctx) = self.ctx {
+        if let Some(ref audio_ctx) = self.ctx && let Some(active_note) = self.guitar_state.active_note {
             let osc = audio_ctx.create_oscillator().unwrap();
             osc.set_type(OscillatorType::Sine);
-            osc.frequency().set_value(440.0); // A4
+            osc.frequency().set_value(active_note.frequency()); // A4
             
             osc.connect_with_audio_node(&audio_ctx.destination()).unwrap();
             osc.start().unwrap();
@@ -78,6 +81,10 @@ impl DawApp {
 #[wasm_bindgen(start)]
 pub fn start() -> Result<(), JsValue> {
     let web_options = eframe::WebOptions::default();
+
+    // Initialize the logger backend
+    // This connects log::info! to console.log()
+    console_log::init_with_level(log::Level::Info).expect("error initializing logger");
 
     wasm_bindgen_futures::spawn_local(async {
         let document = web_sys::window()
