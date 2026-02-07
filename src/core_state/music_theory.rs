@@ -89,6 +89,10 @@ impl Note {
         let other_val = (other.name as i32) + (other.octave as i32 * 12);
         self_val - other_val
     }
+
+    pub fn to_string(&self) -> String { 
+        format!("{}{}", self.name.to_string(), self.octave.to_string())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

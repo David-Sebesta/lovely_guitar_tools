@@ -4,7 +4,10 @@ use crate::core_state::Tuning;
 use crate::core_state::Settings;
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    ui.heading("Settings");
+    ui.horizontal(|ui| {
+        ui.heading("Settings");
+        ui.checkbox(&mut settings.debug, "Debug");
+    });
 
     // Strings combo box
     let before_strings = guitar.config.num_strings; 
