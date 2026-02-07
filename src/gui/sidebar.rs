@@ -1,13 +1,29 @@
 use eframe::egui;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
-use crate::core_state::Settings;
+use crate::core_state::{Settings, Mode};
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
     ui.horizontal(|ui| {
         ui.heading("Settings");
         ui.checkbox(&mut settings.debug, "Debug");
     });
+
+    // Mode
+    let before_mode = settings.mode;
+    egui::ComboBox::from_label("Mode")
+        .selected_text(format!("{:?}", before_mode.to_string()))
+        .show_ui(ui, |ui| {
+            ui.selectable_value(&mut settings.mode, Mode::Scale, Mode::Scale.to_string());
+            ui.selectable_value(&mut settings.mode, Mode::Chord, Mode::Chord.to_string());
+            ui.selectable_value(&mut settings.mode, Mode::ReverseScale, Mode::ReverseScale.to_string());
+            ui.selectable_value(&mut settings.mode, Mode::ReverseChord, Mode::ReverseChord.to_string());
+        });
+
+    // Clear notes when switching mode
+    if before_mode != settings.mode {
+        guitar.clear_notes();
+    }
 
     // Strings combo box
     let before_strings = guitar.config.num_strings; 
@@ -26,6 +42,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
             8 => guitar.config.current_tuning = Tuning::standard_8_string(),
             _ => panic!("Bad number of strings"),
         }
+        guitar.clear_notes();
     }
 
     // Tuning combo box

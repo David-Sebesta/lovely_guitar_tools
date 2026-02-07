@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Index};
+use std::{collections::HashSet, ops::Index};
 use super::music_theory::{Note, NoteName};
 
 
@@ -119,21 +119,12 @@ impl GuitarConfig {
         }
     }
 
-    pub fn get_note_on_fretboard(&self, string: u8, fret: u8) -> Note {
-        if (string as usize) >= self.current_tuning.root_notes.len() {
-            panic!("String out of bounds");
-        }
-
-        let root_note = self.current_tuning[string as usize];
-        root_note.add_semitones(fret as i8)
-    }
-
 }
 
 
 pub struct GuitarState {
     pub config: GuitarConfig,
-    pub active_frets: HashMap<u8, u8>, // String to fret
+    pub active_frets: HashSet<(u8, u8)>, // String to fret
     pub active_note: Option<Note>,
 }
 
@@ -141,10 +132,39 @@ impl GuitarState {
     pub fn new() -> Self {
         Self {
             config: GuitarConfig::standard_6_string(),
-            active_frets: HashMap::new(),
+            active_frets: HashSet::new(),
             active_note: Option::None,
         }
     }
+
+    pub fn get_note_on_fretboard(&self, string: u8, fret: u8) -> Note {
+        if (string as usize) >= self.config.current_tuning.root_notes.len() {
+            panic!("String out of bounds");
+        }
+
+        let root_note = self.config.current_tuning[string as usize];
+        root_note.add_semitones(fret as i8)
+    }
+
+    pub fn clear_notes(&mut self) {
+        self.active_frets.clear();
+    }
+
+    pub fn toggle_note(&mut self, string: u8, fret: u8) {
+        if self.active_frets.contains(&(string, fret)) {
+            self.active_frets.remove(&(string, fret));
+        } else {
+            self.active_frets.insert((string, fret));
+        }
+    }
+
+    // Clears all other notes on string
+    pub fn set_strings_note(&mut self, string: u8, fret: u8) {
+        self.active_frets.retain(|(s, _)| *s != string);
+        self.active_frets.insert((string, fret));
+    }
+
+
 }
 
 

@@ -12,3 +12,4 @@ pub use guitar::GuitarConfig;
 pub use guitar::GuitarState;
 
 pub use settings::Settings;
+pub use settings::Mode;

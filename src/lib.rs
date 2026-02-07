@@ -10,7 +10,7 @@ mod gui;
 mod tests;
 
 #[wasm_bindgen]
-pub struct DawApp {
+pub struct LovelyGuitarToolsApp {
     ctx: Option<AudioContext>,
     // States
     guitar_state: core_state::GuitarState,
@@ -21,7 +21,7 @@ pub struct DawApp {
 
 }
 
-impl Default for DawApp {
+impl Default for LovelyGuitarToolsApp {
     fn default() -> Self {
         Self { 
             ctx: None,
@@ -32,11 +32,13 @@ impl Default for DawApp {
     }
 }
 
-impl eframe::App for DawApp {
+impl eframe::App for LovelyGuitarToolsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         gui::header::show(ctx);
 
-        egui::SidePanel::left("left_panel").show(ctx, |ui| {
+        egui::SidePanel::left("left_panel")
+            .min_width(280.0)
+            .show(ctx, |ui| {
             gui::sidebar::show(ui, &mut self.guitar_state, &mut self.settings);
         });
 
@@ -55,7 +57,7 @@ impl eframe::App for DawApp {
     }
 }
 
-impl DawApp {
+impl LovelyGuitarToolsApp {
     fn play_test_tone(&mut self) {
         // Initialize context on first click (browsers block auto-audio)
         if self.ctx.is_none() {
@@ -102,7 +104,7 @@ pub fn start() -> Result<(), JsValue> {
             .start(
                 canvas,
                 web_options,
-                Box::new(|_cc| Ok(Box::new(DawApp::default()))),
+                Box::new(|_cc| Ok(Box::new(LovelyGuitarToolsApp::default()))),
             )
             .await
             .expect("failed to start eframe");

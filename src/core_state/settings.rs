@@ -1,13 +1,25 @@
 use super::guitar::GuitarConfig;
 
-
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Mode {
     Scale,
     Chord,
+    ReverseScale,
+    ReverseChord,
+}
+
+impl Mode {
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            Mode::Scale => "Scale",
+            Mode::Chord => "Chord",
+            Mode::ReverseScale => "Reverse Scale",
+            Mode::ReverseChord => "Reverse Chord",
+        }
+    }
 }
 
 pub struct Settings {
-    pub guitar_config: GuitarConfig,
     pub mode: Mode, // Scale, chord...
     pub debug: bool,
 }
@@ -16,9 +28,8 @@ pub struct Settings {
 impl Settings {
     pub fn new() -> Self {
         Self {
-            guitar_config: GuitarConfig::standard_6_string(),
-            mode: Mode::Scale,
-            debug: true,
+            mode: Mode::ReverseScale,
+            debug: false,
         }
     }
 }

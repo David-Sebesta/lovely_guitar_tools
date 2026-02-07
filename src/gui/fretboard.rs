@@ -1,8 +1,8 @@
 use eframe::egui;
-use egui::Sense;
+use egui::{Align2, FontFamily, FontId, Sense};
 use egui::{Color32, Painter, Pos2, Rect, Stroke, Vec2};
-use crate::core_state::GuitarState;
-use crate::core_state::Settings;
+use crate::core_state::{GuitarState, ScaleType};
+use crate::core_state::{Settings, Mode};
 
 
 struct FretboardLayout {
@@ -74,7 +74,6 @@ impl FretboardLayout {
 
 }
 
-
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
     // 25 since there is a 0 fret (open string)
     let num_frets: u8 = 25;
@@ -91,7 +90,17 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
         if let Some(mouse_pos) = response.interact_pointer_pos() {
             let (string, fret) = layout.get_hit_string_and_fret(mouse_pos);
 
-            let note = guitar.config.get_note_on_fretboard(string, fret);
+            let note = guitar.get_note_on_fretboard(string, fret);
+            match settings.mode {
+                Mode::ReverseScale => {
+                    guitar.toggle_note(string, fret);
+                },
+                Mode::ReverseChord => {
+                    guitar.set_strings_note(string, fret);
+                },
+                _ => {}
+            }
+
             guitar.active_note = Some(note);
             log::info!("Clicked String: {}, Fret: {}, Note: {}", string, fret, note.to_string());
         }
@@ -99,6 +108,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
 
     let painter = ui.painter_at(rect);
     draw_fretboard(&painter, &layout);
+    draw_active_notes(&painter, &layout, guitar);
 
     if settings.debug {
         draw_debug_overlay(&painter, &layout);
@@ -156,6 +166,23 @@ fn draw_fretboard(painter: &Painter, layout: &FretboardLayout) {
 
 }
 
+fn draw_active_notes(painter: &Painter, layout: &FretboardLayout, guitar: &GuitarState) {
+
+    const RADIUS: f32 = 14.0;
+    let circle_color = Color32::LIGHT_YELLOW;
+    let text_color = Color32::BLACK;
+
+    for (string, fret) in guitar.active_frets.iter() {
+        let hitbox = layout.get_hitbox_rect(*string, *fret);
+        let note = guitar.get_note_on_fretboard(*string, *fret);
+
+        painter.circle_filled(hitbox.center(), RADIUS, circle_color);
+        painter.text(hitbox.center(), Align2::CENTER_CENTER, note.to_string(), 
+                    FontId::new(16.0, FontFamily::default()), text_color);
+
+    }
+}
+
 fn draw_debug_overlay(painter: &Painter, layout: &FretboardLayout) {
     let debug_color = Color32::from_rgba_unmultiplied(255, 0, 0, 255);
     let stroke = Stroke::new(1.0, Color32::YELLOW);
@@ -170,6 +197,8 @@ fn draw_debug_overlay(painter: &Painter, layout: &FretboardLayout) {
         }
     }
 }
+
+
 
 #[cfg(test)]
 mod tests {
