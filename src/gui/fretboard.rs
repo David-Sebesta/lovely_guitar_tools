@@ -37,7 +37,8 @@ impl FretboardLayout {
     // Screen point -> (string, fret)
     fn get_hit_string_and_fret(&self, pos: Pos2) -> (u8, u8) {
         let relative_x = pos.x - self.rect.min.x;
-        let relative_y = pos.y - self.rect.min.y;
+        // Fix: Use string_start_y to align with the actual drawn string positions
+        let relative_y = pos.y - self.string_start_y;
 
         let fret = (relative_x / self.fret_width).floor() as u8;
         
@@ -167,5 +168,98 @@ fn draw_debug_overlay(painter: &Painter, layout: &FretboardLayout) {
 
             painter.circle_filled(hitbox.center(), 2.0, debug_color);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use egui::{Rect, Pos2, Vec2};
+
+    fn create_test_layout() -> FretboardLayout {
+        let rect = Rect::from_min_size(Pos2::new(0.0, 0.0), Vec2::new(1000.0, 500.0));
+        // 6 strings, 25 frets
+        FretboardLayout::new(rect, 6, 25)
+    }
+
+    #[test]
+    fn test_round_trip_consistency() {
+        let layout = create_test_layout();
+
+        for s in 0..6 {
+            for f in 0..=25 {
+                let hitbox = layout.get_hitbox_rect(s, f);
+                let click_pos = hitbox.center();
+                let (detected_s, detected_f) = layout.get_hit_string_and_fret(click_pos);
+
+                assert_eq!(
+                    (s, f), 
+                    (detected_s, detected_f), 
+                    "Mismatch at String {}, Fret {}. Detected String {}, Fret {} instead. Hitbox center: {:?}", 
+                    s, f, detected_s, detected_f, click_pos
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_click_clamping() {
+        let layout = create_test_layout();
+        
+        // Click way top-left
+        let (s, f) = layout.get_hit_string_and_fret(Pos2::new(-50.0, -50.0));
+        
+        // Fret logic: -50 x -> floor -> negative -> clamp(0) -> 0.
+        // String logic:
+        // relative_y = -50.
+        // string_float = -50 / height. Negative.
+        // Round -> Negative integer.
+        // Clamp(0, 5) -> 0.
+        // Invert -> 5 - 0 = 5.
+        // So clicking WAY ABOVE the fretboard returns String 5 (High E).
+        assert_eq!(f, 0);
+        assert_eq!(s, 5); 
+
+        // Click way bottom-right
+        let (s, f) = layout.get_hit_string_and_fret(Pos2::new(9999.0, 9999.0));
+        
+        // Fret -> Max (25)
+        // String -> Large positive -> Clamped to 5 -> Inverted -> 5-5 = 0.
+        assert_eq!(f, 25);
+        assert_eq!(s, 0);
+    }
+
+    #[test]
+    fn test_click_bias() {
+        // Small layout to exaggerate the error
+        let rect = Rect::from_min_size(Pos2::new(0.0, 0.0), Vec2::new(100.0, 100.0));
+        let layout = FretboardLayout::new(rect, 4, 10);
+        
+        // Usable height = 100 - 20 = 80.
+        // Strings = 4. Gaps = 3.
+        // String Height = 80 / 3 = 26.666...
+        // String 0 Y = 10.0.
+        // String 1 Y = 36.666...
+        
+        // Click at Y=20.0.
+        // Distance to String 0 (10.0) = 10.0.
+        // Distance to String 1 (36.66) = 16.66.
+        // Should be String 0.
+        
+        // Invert check: 
+        // We want to check the RAW string index first to avoid confusion with inversion.
+        // The helper 'get_hit_string_and_fret' returns inverted strings.
+        // String 0 (visually top) is index 3 (visually bottom) in the return value?
+        // Wait, 'get_hitbox_rect' index 0 is TOP.
+        // 'get_hit_string_and_fret' returns INVERTED index.
+        // If I pass inverted index 3 (High E / Top) to get_hitbox_rect?
+        // Let's trace get_hitbox_rect: "Invert string: let string = (num-1) - string_idx".
+        // If I pass 3 -> string = 0. y_center = 10.0.
+        // So 'String 3' (High E) is at Y=10.0.
+        
+        // So we expect 'get_hit_string_and_fret' to return 3.
+        
+        let (s, _) = layout.get_hit_string_and_fret(Pos2::new(50.0, 20.0));
+        assert_eq!(s, 3, "Clicked Y=20 (closer to Top String Y=10), but got String index {}", s);
     }
 }
