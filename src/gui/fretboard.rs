@@ -1,7 +1,7 @@
 use eframe::egui;
 use egui::{Align2, FontFamily, FontId, Sense};
 use egui::{Color32, Painter, Pos2, Rect, Stroke, Vec2};
-use crate::core_state::{GuitarState, ScaleType};
+use crate::core_state::GuitarState;
 use crate::core_state::{Settings, Mode};
 
 

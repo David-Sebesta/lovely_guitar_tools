@@ -1,4 +1,4 @@
-use strum::{IntoEnumIterator, EnumIter};
+use strum::EnumIter;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter)]
 pub enum NoteName {

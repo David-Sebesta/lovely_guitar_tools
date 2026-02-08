@@ -1,7 +1,6 @@
 use eframe::egui;
 use wasm_bindgen::prelude::*;
 use web_sys::{AudioContext, OscillatorType};
-use console_log;
 
 pub mod core_state;
 mod gui;

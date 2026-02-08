@@ -1,19 +1,10 @@
 use eframe::egui;
-use egui::ComboBox;
-use egui::SelectableLabel;
 use strum::IntoEnumIterator;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
 use crate::core_state::NoteName;
 use crate::core_state::ScaleType;
 use crate::core_state::{Settings, Mode};
-
-macro_rules! selectable_enum {
-    ($ui:expr, $current_val:expr, $enum_type:ident, [ $($variant:ident),* ]) => {
-        $( $ui.selectable_value($current_val, $enum_type::$variant, $enum_type::$variant.to_string()); )*
-    };
-}   
-
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
     ui.horizontal(|ui| {

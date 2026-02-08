@@ -1,4 +1,4 @@
-use super::music_theory::{Scale, ScaleType, NoteName};
+use super::music_theory::{Scale};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Mode {
