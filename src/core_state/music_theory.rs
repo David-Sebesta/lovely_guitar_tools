@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+use strum::{IntoEnumIterator, EnumIter};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter)]
 pub enum NoteName {
     C = 0,
     CSharp = 1,
@@ -95,7 +97,7 @@ impl Note {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum ScaleType {
     Major,
     Minor,
@@ -104,11 +106,92 @@ pub enum ScaleType {
     Blues,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+impl ScaleType {
+    pub fn intervals(&self) -> Vec<i8> {
+        match self {
+            ScaleType::Major => vec![0, 2, 4, 5, 7, 9, 11],
+            ScaleType::Minor => vec![0, 2, 3, 5, 7, 8, 10],
+            ScaleType::PentatonicMajor => vec![0, 3, 5, 7, 10],
+            ScaleType::PentatonicMinor => vec![0, 2, 4, 7, 9],
+            ScaleType::Blues => vec![0, 4, 5, 6, 7, 10],
+        }
+    }
+
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            ScaleType::Major => "Major",
+            ScaleType::Minor => "Minor",
+            ScaleType::PentatonicMajor => "Pentatonic Major",
+            ScaleType::PentatonicMinor => "Pentatonic Minor",
+            ScaleType::Blues => "Blues",
+        }
+    }
+}
+
+pub struct Scale {
+    pub root: NoteName,
+    pub scale_type: ScaleType,
+}
+
+impl Scale {
+    pub fn new(root: NoteName, scale_type: ScaleType) -> Self {
+        Self {root, scale_type}
+    }
+
+    pub fn notes(&self) -> Vec<NoteName> {
+        let intervals = self.scale_type.intervals();
+        intervals.iter().map(|&interval| {
+                let root_val = self.root as i8;
+                let note_val = (root_val + interval).rem_euclid(NoteName::TOTAL as i8);
+                NoteName::from_u8(note_val as u8)
+        }).collect()
+    }
+
+    pub fn contains(&self, note: NoteName) -> bool {
+        self.notes().contains(&note)
+    }
+}
+
+impl Default for Scale {
+    fn default() -> Self {
+        Self {
+            root: NoteName::C,
+            scale_type: ScaleType::Major,
+        }
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum ChordType {
     Major,
     Minor,
     Diminished,
     Augmented,
     Seven,
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scale_round_trip() {
+        let scale = Scale::new(NoteName::C, ScaleType::Major);
+        assert_eq!(true,  scale.contains(NoteName::C));
+        assert_eq!(false, scale.contains(NoteName::CSharp));
+        assert_eq!(true,  scale.contains(NoteName::D));
+        assert_eq!(false, scale.contains(NoteName::DSharp));
+        assert_eq!(true,  scale.contains(NoteName::E));
+        assert_eq!(true,  scale.contains(NoteName::F));
+        assert_eq!(false, scale.contains(NoteName::FSharp));
+        assert_eq!(true,  scale.contains(NoteName::G));
+        assert_eq!(false, scale.contains(NoteName::GSharp));
+        assert_eq!(true,  scale.contains(NoteName::A));
+        assert_eq!(false, scale.contains(NoteName::ASharp));
+        assert_eq!(true,  scale.contains(NoteName::B));
+    }
+
+
 }

@@ -1,7 +1,19 @@
 use eframe::egui;
+use egui::ComboBox;
+use egui::SelectableLabel;
+use strum::IntoEnumIterator;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
+use crate::core_state::NoteName;
+use crate::core_state::ScaleType;
 use crate::core_state::{Settings, Mode};
+
+macro_rules! selectable_enum {
+    ($ui:expr, $current_val:expr, $enum_type:ident, [ $($variant:ident),* ]) => {
+        $( $ui.selectable_value($current_val, $enum_type::$variant, $enum_type::$variant.to_string()); )*
+    };
+}   
+
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
     ui.horizontal(|ui| {
@@ -23,6 +35,20 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
     // Clear notes when switching mode
     if before_mode != settings.mode {
         guitar.clear_notes();
+        match settings.mode {
+            Mode::Scale => {
+                guitar.update_scale_notes(&settings.scale);
+            },
+            Mode::Chord => {
+
+            },
+            Mode::ReverseScale => {
+
+            },
+            Mode::ReverseChord => {
+
+            },
+        }
     }
 
     // Strings combo box
@@ -90,5 +116,44 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         }
     });
 
+    // Scale or chord
+    ui.add_space(10.0);
+    match settings.mode {
+        Mode::Scale => {
+            show_scale_settings(ui, guitar, settings);
+        },
+        Mode::Chord => {
 
+        },
+        _ => {}
+    }
+
+
+}
+
+
+fn show_scale_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+    // Root note
+    let before_root = settings.scale.root;
+    egui::ComboBox::from_label("Root Note")
+    .selected_text(before_root.to_string())
+    .show_ui(ui, |ui| {
+        for note in NoteName::iter() {
+            ui.selectable_value(&mut settings.scale.root, note, note.to_string());
+        }
+    });
+    
+    let before_scale_type = settings.scale.scale_type;
+    egui::ComboBox::from_label("Scale Type")
+    .selected_text(before_scale_type.to_string())
+    .show_ui(ui, |ui| {
+        for scale_type in ScaleType::iter() {
+            ui.selectable_value(&mut settings.scale.scale_type, scale_type, scale_type.to_string());
+        }
+    });
+    
+    // New scale
+    if before_root != settings.scale.root || before_scale_type != settings.scale.scale_type {
+        guitar.update_scale_notes(&settings.scale);
+    }
 }

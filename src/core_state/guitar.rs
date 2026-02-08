@@ -1,5 +1,5 @@
 use std::{collections::HashSet, ops::Index};
-use super::music_theory::{Note, NoteName};
+use super::music_theory::{Note, NoteName, Scale};
 
 
 #[derive(Clone, PartialEq)]
@@ -100,6 +100,7 @@ impl Index<usize> for Tuning {
 
 pub struct GuitarConfig {
     pub num_strings: u8,
+    pub num_frets: u8,
     pub current_tuning: Tuning,
 
 }
@@ -108,14 +109,16 @@ impl GuitarConfig {
     pub fn standard_6_string() -> Self {
         Self {
             num_strings: 6,
-            current_tuning: Tuning::standard_6_string()
+            num_frets: 24,
+            current_tuning: Tuning::standard_6_string(),
         }
     }
 
     pub fn drop_d_6_string() -> Self {
         Self {
             num_strings: 6,
-            current_tuning: Tuning::drop_d_6_string()
+            num_frets: 24,
+            current_tuning: Tuning::drop_d_6_string(),
         }
     }
 
@@ -162,6 +165,21 @@ impl GuitarState {
     pub fn set_strings_note(&mut self, string: u8, fret: u8) {
         self.active_frets.retain(|(s, _)| *s != string);
         self.active_frets.insert((string, fret));
+    }
+
+    pub fn update_scale_notes(&mut self, scale: &Scale) {
+        self.clear_notes();
+        
+        let scale_notes = scale.notes();
+        for string in 0..self.config.num_strings {
+            for fret in 0..=self.config.num_frets {
+                let note = self.get_note_on_fretboard(string, fret);
+                if scale_notes.contains(&note.name) {
+                    self.active_frets.insert((string, fret));
+                }
+            }
+        }
+
     }
 
 

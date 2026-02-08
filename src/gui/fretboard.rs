@@ -20,7 +20,8 @@ impl FretboardLayout {
         let vertical_padding = 10.0;
         let usable_height = rect.height() - (vertical_padding * 2.0);
 
-        let fret_width = rect.width() / num_frets as f32;
+        // Since there is a zero fret add 1
+        let fret_width = rect.width() / (num_frets + 1) as f32;
 
         let string_height = usable_height / (num_strings - 1) as f32;
 
@@ -76,7 +77,7 @@ impl FretboardLayout {
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
     // 25 since there is a 0 fret (open string)
-    let num_frets: u8 = 25;
+    let num_frets: u8 = guitar.config.num_frets;
     let num_strings = guitar.config.num_strings;
 
     // Allocate space
@@ -188,7 +189,7 @@ fn draw_debug_overlay(painter: &Painter, layout: &FretboardLayout) {
     let stroke = Stroke::new(1.0, Color32::YELLOW);
 
     for s in 0..layout.num_strings {
-        for f in 0..layout.num_frets {
+        for f in 0..=layout.num_frets {
             let hitbox = layout.get_hitbox_rect(s, f);
 
             painter.rect_stroke(hitbox, 0.0, stroke, egui::StrokeKind::Middle);
