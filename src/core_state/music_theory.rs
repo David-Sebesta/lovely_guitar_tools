@@ -97,6 +97,15 @@ impl Note {
     }
 }
 
+pub trait HasIntervals {
+    fn intervals(&self) -> Vec<i8>;
+}
+
+pub trait MusicalStructure {
+    fn root(&self) -> NoteName;
+    
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum ScaleType {
     Major,
@@ -168,7 +177,54 @@ pub enum ChordType {
     Minor,
     Diminished,
     Augmented,
-    Seven,
+    MajorSeven,
+}
+
+impl ChordType {
+    pub fn intervals(&self) -> Vec<i8> {
+        match self {
+            ChordType::Major => vec![0, 4, 7],
+            ChordType::Minor => vec![0, 3, 7],
+            ChordType::Diminished => vec![0, 3, 6],
+            ChordType::Augmented => vec![0],
+            ChordType::MajorSeven => vec![0, 4, 7, 10],
+        }
+    }
+
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            ChordType::Major => "Major",
+            ChordType::Minor => "Minor",
+            ChordType::Diminished => "Diminished",
+            ChordType::Augmented => "Augmented",
+            ChordType::MajorSeven => "Major 7",
+        }
+    }
+}
+
+struct Chord {
+    pub root: NoteName,
+    pub chord_type: ChordType,
+    pub position: u8,
+}
+
+impl Chord {
+    pub fn new(root: NoteName, chord_type: ChordType, position: u8) -> Self {
+        Self { root, chord_type, position}
+    }
+
+
+
+}
+
+impl Default for Chord {
+    fn default() -> Self {
+        Self { 
+            root: NoteName::C, 
+            chord_type: ChordType::Major,
+            position: 1,
+        }
+    }
 }
 
 
