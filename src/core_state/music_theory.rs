@@ -97,12 +97,29 @@ impl Note {
     }
 }
 
+// 
 pub trait HasIntervals {
     fn intervals(&self) -> Vec<i8>;
 }
 
+// Musical Structure trait has roots and intervals
+// It is basically a collection of notes based on the root and interval between the root and notes
 pub trait MusicalStructure {
     fn root(&self) -> NoteName;
+    fn intervals(&self) -> Vec<i8>;
+
+    fn notes(&self) -> Vec<NoteName> {
+        let root_val = self.root() as i8;
+
+        self.intervals().iter().map(|&interval| {
+            let note_val = (root_val + interval).rem_euclid(NoteName::TOTAL as i8);
+            NoteName::from_u8(note_val as u8)
+        }).collect()
+    }
+    
+    fn contains(&self, note: NoteName) -> bool {
+        self.notes().contains(&note)
+    }
     
 }
 
@@ -116,16 +133,6 @@ pub enum ScaleType {
 }
 
 impl ScaleType {
-    pub fn intervals(&self) -> Vec<i8> {
-        match self {
-            ScaleType::Major => vec![0, 2, 4, 5, 7, 9, 11],
-            ScaleType::Minor => vec![0, 2, 3, 5, 7, 8, 10],
-            ScaleType::PentatonicMajor => vec![0, 3, 5, 7, 10],
-            ScaleType::PentatonicMinor => vec![0, 2, 4, 7, 9],
-            ScaleType::Blues => vec![0, 4, 5, 6, 7, 10],
-        }
-    }
-
     pub fn to_string(&self) -> &'static str {
         match self {
             ScaleType::Major => "Major",
@@ -133,6 +140,18 @@ impl ScaleType {
             ScaleType::PentatonicMajor => "Pentatonic Major",
             ScaleType::PentatonicMinor => "Pentatonic Minor",
             ScaleType::Blues => "Blues",
+        }
+    }
+}
+
+impl HasIntervals for ScaleType {
+    fn intervals(&self) -> Vec<i8> {
+        match self {
+            ScaleType::Major => vec![0, 2, 4, 5, 7, 9, 11],
+            ScaleType::Minor => vec![0, 2, 3, 5, 7, 8, 10],
+            ScaleType::PentatonicMajor => vec![0, 3, 5, 7, 10],
+            ScaleType::PentatonicMinor => vec![0, 2, 4, 7, 9],
+            ScaleType::Blues => vec![0, 4, 5, 6, 7, 10],
         }
     }
 }
@@ -146,19 +165,6 @@ impl Scale {
     pub fn new(root: NoteName, scale_type: ScaleType) -> Self {
         Self {root, scale_type}
     }
-
-    pub fn notes(&self) -> Vec<NoteName> {
-        let intervals = self.scale_type.intervals();
-        intervals.iter().map(|&interval| {
-                let root_val = self.root as i8;
-                let note_val = (root_val + interval).rem_euclid(NoteName::TOTAL as i8);
-                NoteName::from_u8(note_val as u8)
-        }).collect()
-    }
-
-    pub fn contains(&self, note: NoteName) -> bool {
-        self.notes().contains(&note)
-    }
 }
 
 impl Default for Scale {
@@ -170,7 +176,17 @@ impl Default for Scale {
     }
 }
 
+impl MusicalStructure for Scale {
+    fn root(&self) -> NoteName {
+        self.root
+    }
 
+    fn intervals(&self) -> Vec<i8> {
+        self.scale_type.intervals()
+    }
+}
+
+// Chords
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub enum ChordType {
     Major,
@@ -181,16 +197,6 @@ pub enum ChordType {
 }
 
 impl ChordType {
-    pub fn intervals(&self) -> Vec<i8> {
-        match self {
-            ChordType::Major => vec![0, 4, 7],
-            ChordType::Minor => vec![0, 3, 7],
-            ChordType::Diminished => vec![0, 3, 6],
-            ChordType::Augmented => vec![0],
-            ChordType::MajorSeven => vec![0, 4, 7, 10],
-        }
-    }
-
     pub fn to_string(&self) -> &'static str {
         match self {
             ChordType::Major => "Major",
@@ -202,7 +208,19 @@ impl ChordType {
     }
 }
 
-struct Chord {
+impl HasIntervals for ChordType {
+    fn intervals(&self) -> Vec<i8> {
+        match self {
+            ChordType::Major => vec![0, 4, 7],
+            ChordType::Minor => vec![0, 3, 7],
+            ChordType::Diminished => vec![0, 3, 6],
+            ChordType::Augmented => vec![0],
+            ChordType::MajorSeven => vec![0, 4, 7, 10],
+        }
+    }
+}
+
+pub struct Chord {
     pub root: NoteName,
     pub chord_type: ChordType,
     pub position: u8,
@@ -212,9 +230,6 @@ impl Chord {
     pub fn new(root: NoteName, chord_type: ChordType, position: u8) -> Self {
         Self { root, chord_type, position}
     }
-
-
-
 }
 
 impl Default for Chord {
@@ -224,6 +239,16 @@ impl Default for Chord {
             chord_type: ChordType::Major,
             position: 1,
         }
+    }
+}
+
+impl MusicalStructure for Chord {
+    fn root(&self) -> NoteName {
+        self.root
+    }
+
+    fn intervals(&self) -> Vec<i8> {
+        self.chord_type.intervals()
     }
 }
 

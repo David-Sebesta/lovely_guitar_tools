@@ -3,7 +3,7 @@ use strum::IntoEnumIterator;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
 use crate::core_state::NoteName;
-use crate::core_state::ScaleType;
+use crate::core_state::MusicalStructure;
 use crate::core_state::{Settings, Mode};
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
@@ -28,10 +28,10 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         guitar.clear_notes();
         match settings.mode {
             Mode::Scale => {
-                guitar.update_scale_notes(&settings.scale);
+                guitar.update_notes(&settings.scale.notes());
             },
             Mode::Chord => {
-
+                guitar.update_notes(&settings.chord.notes());
             },
             Mode::ReverseScale => {
 
@@ -59,7 +59,21 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
             8 => guitar.config.current_tuning = Tuning::standard_8_string(),
             _ => panic!("Bad number of strings"),
         }
-        guitar.clear_notes();
+        match settings.mode {
+            Mode::Scale => {
+                guitar.update_notes(&settings.scale.notes());
+            },
+            Mode::Chord => {
+                guitar.update_notes(&settings.chord.notes());
+            },
+            Mode::ReverseScale => {
+                guitar.clear_notes();
+            },
+            Mode::ReverseChord => {
+                guitar.clear_notes();
+            },
+        }
+
     }
 
     // Tuning combo box
@@ -114,7 +128,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
             show_scale_settings(ui, guitar, settings);
         },
         Mode::Chord => {
-
+            show_chord_settings(ui, guitar, settings);
         },
         _ => {}
     }
@@ -122,29 +136,56 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
 
 }
 
-
-fn show_scale_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    // Root note
-    let before_root = settings.scale.root;
-    egui::ComboBox::from_label("Root Note")
+fn show_scale_or_chord_selector<T> ( 
+    ui: &mut egui::Ui,
+    label_root: &str,
+    label_type: &str,
+    root: &mut NoteName, 
+    structure_type: &mut T,
+    get_name: impl Fn(&T) -> &str,
+) -> bool
+where T: IntoEnumIterator + PartialEq + Copy {
+    
+    let before_root = *root;
+    let before_type = *structure_type;
+    
+    // Root Note
+    egui::ComboBox::from_label(label_root)
     .selected_text(before_root.to_string())
     .show_ui(ui, |ui| {
         for note in NoteName::iter() {
-            ui.selectable_value(&mut settings.scale.root, note, note.to_string());
+            ui.selectable_value(root, note, note.to_string());
         }
     });
-    
-    let before_scale_type = settings.scale.scale_type;
-    egui::ComboBox::from_label("Scale Type")
-    .selected_text(before_scale_type.to_string())
+
+    // Type
+    egui::ComboBox::from_label(label_type)
+    .selected_text(get_name(&before_type))
     .show_ui(ui, |ui| {
-        for scale_type in ScaleType::iter() {
-            ui.selectable_value(&mut settings.scale.scale_type, scale_type, scale_type.to_string());
+        for t in T::iter() {
+            let name = get_name(&t).to_string();
+            ui.selectable_value(structure_type, t, name);
         }
     });
-    
-    // New scale
-    if before_root != settings.scale.root || before_scale_type != settings.scale.scale_type {
-        guitar.update_scale_notes(&settings.scale);
-    }
+
+    // If something changed
+    before_root != *root || before_type != *structure_type
+}
+
+
+fn show_scale_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+    if show_scale_or_chord_selector(ui, "Root Note", "Scale Type", 
+        &mut settings.scale.root, &mut settings.scale.scale_type,
+        |t| t.to_string()) {
+            guitar.update_notes(&settings.scale.notes());
+        }
+}
+
+
+fn show_chord_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+    if show_scale_or_chord_selector(ui, "Root Note", "Chord Type", 
+        &mut settings.chord.root, &mut settings.chord.chord_type,
+        |t| t.to_string()) {
+            guitar.update_notes(&settings.chord.notes());
+        }
 }

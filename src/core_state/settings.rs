@@ -1,4 +1,4 @@
-use super::music_theory::{Scale};
+use super::music_theory::{Scale, Chord};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Mode {
@@ -22,6 +22,7 @@ impl Mode {
 pub struct Settings {
     pub mode: Mode, // Scale, chord...
     pub scale: Scale,
+    pub chord: Chord,
     pub debug: bool,
 }
 
@@ -31,6 +32,7 @@ impl Settings {
         Self {
             mode: Mode::ReverseScale,
             scale: Scale::default(),
+            chord: Chord::default(),
             debug: false,
         }
     }

@@ -1,4 +1,6 @@
 use std::{collections::HashSet, ops::Index};
+use crate::core_state::music_theory::MusicalStructure;
+
 use super::music_theory::{Note, NoteName, Scale};
 
 
@@ -165,6 +167,19 @@ impl GuitarState {
     pub fn set_strings_note(&mut self, string: u8, fret: u8) {
         self.active_frets.retain(|(s, _)| *s != string);
         self.active_frets.insert((string, fret));
+    }
+
+    pub fn update_notes(&mut self, notes: &Vec<NoteName>) {
+        self.clear_notes();
+ 
+        for string in 0..self.config.num_strings {
+            for fret in 0..=self.config.num_frets {
+                let note = self.get_note_on_fretboard(string, fret);
+                if notes.contains(&note.name) {
+                    self.active_frets.insert((string, fret));
+                }
+            }
+        }
     }
 
     pub fn update_scale_notes(&mut self, scale: &Scale) {
