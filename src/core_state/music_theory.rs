@@ -127,9 +127,17 @@ pub trait MusicalStructure {
 pub enum ScaleType {
     Major,
     Minor,
-    PentatonicMinor,
     PentatonicMajor,
+    PentatonicMinor,
     Blues,
+    Dorian,
+    Phrygian,
+    Lydian,
+    Mixolydian,
+    Locrian,
+    HarmonicMinor,
+    MelodicMinor,
+    WholeTone,
 }
 
 impl ScaleType {
@@ -140,6 +148,14 @@ impl ScaleType {
             ScaleType::PentatonicMajor => "Pentatonic Major",
             ScaleType::PentatonicMinor => "Pentatonic Minor",
             ScaleType::Blues => "Blues",
+            ScaleType::Dorian => "Dorian",
+            ScaleType::Phrygian => "Phrygian",
+            ScaleType::Lydian => "Lydian",
+            ScaleType::Mixolydian => "Mixolydian",
+            ScaleType::Locrian => "Locrian",
+            ScaleType::HarmonicMinor => "Harmonic Minor",
+            ScaleType::MelodicMinor => "Melodic Minor",
+            ScaleType::WholeTone => "Whole Tone",
         }
     }
 }
@@ -149,9 +165,17 @@ impl HasIntervals for ScaleType {
         match self {
             ScaleType::Major => vec![0, 2, 4, 5, 7, 9, 11],
             ScaleType::Minor => vec![0, 2, 3, 5, 7, 8, 10],
-            ScaleType::PentatonicMajor => vec![0, 3, 5, 7, 10],
-            ScaleType::PentatonicMinor => vec![0, 2, 4, 7, 9],
-            ScaleType::Blues => vec![0, 4, 5, 6, 7, 10],
+            ScaleType::PentatonicMajor => vec![0, 2, 4, 7, 9],
+            ScaleType::PentatonicMinor => vec![0, 3, 5, 7, 10],
+            ScaleType::Blues => vec![0, 3, 5, 6, 7, 10],
+            ScaleType::Dorian => vec![0, 2, 3, 5, 7, 9, 10],
+            ScaleType::Phrygian => vec![0, 1, 3, 5, 7, 8, 10],
+            ScaleType::Lydian => vec![0, 2, 4, 6, 7, 9, 11],
+            ScaleType::Mixolydian => vec![0, 2, 4, 5, 7, 9, 10],
+            ScaleType::Locrian => vec![0, 1, 3, 5, 6, 8, 10],
+            ScaleType::HarmonicMinor => vec![0, 2, 3, 5, 7, 8, 11],
+            ScaleType::MelodicMinor => vec![0, 2, 3, 5, 7, 9, 11],
+            ScaleType::WholeTone => vec![0, 2, 4, 6, 8, 10],
         }
     }
 }
@@ -199,6 +223,14 @@ pub enum ChordType {
     Diminished,
     Augmented,
     MajorSeven,
+    DominantSeven,
+    MinorSeven,
+    SuspendedTwo,
+    SuspendedFour,
+    MinorSevenFlatFive,
+    DiminishedSeven,
+    MajorNine,
+    MinorNine,
 }
 
 impl ChordType {
@@ -209,6 +241,14 @@ impl ChordType {
             ChordType::Diminished => "Diminished",
             ChordType::Augmented => "Augmented",
             ChordType::MajorSeven => "Major 7",
+            ChordType::DominantSeven => "Dominant 7",
+            ChordType::MinorSeven => "Minor 7",
+            ChordType::SuspendedTwo => "Sus 2",
+            ChordType::SuspendedFour => "Sus 4",
+            ChordType::MinorSevenFlatFive => "m7b5",
+            ChordType::DiminishedSeven => "Diminished 7",
+            ChordType::MajorNine => "Major 9",
+            ChordType::MinorNine => "Minor 9",
         }
     }
 }
@@ -219,8 +259,16 @@ impl HasIntervals for ChordType {
             ChordType::Major => vec![0, 4, 7],
             ChordType::Minor => vec![0, 3, 7],
             ChordType::Diminished => vec![0, 3, 6],
-            ChordType::Augmented => vec![0],
-            ChordType::MajorSeven => vec![0, 4, 7, 10],
+            ChordType::Augmented => vec![0, 4, 8],
+            ChordType::MajorSeven => vec![0, 4, 7, 11],
+            ChordType::DominantSeven => vec![0, 4, 7, 10],
+            ChordType::MinorSeven => vec![0, 3, 7, 10],
+            ChordType::SuspendedTwo => vec![0, 2, 7],
+            ChordType::SuspendedFour => vec![0, 5, 7],
+            ChordType::MinorSevenFlatFive => vec![0, 3, 6, 10],
+            ChordType::DiminishedSeven => vec![0, 3, 6, 9],
+            ChordType::MajorNine => vec![0, 4, 7, 11, 2],
+            ChordType::MinorNine => vec![0, 3, 7, 10, 2],
         }
     }
 }

@@ -195,15 +195,17 @@ fn show_chord_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &m
 }
 
 fn show_reverse_scales(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    let matching_scales = find_matching_scales(&guitar.get_active_note_names());
-    for scale in matching_scales {
-        ui.label(scale.to_string());
+    if let Some(matching_scales) = &guitar.matching_scales {
+        for scale in matching_scales {
+            ui.label(scale.to_string());
+        }
     }
 }
 
 fn show_reverse_chords(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    let matching_chords = find_matching_chords(&guitar.get_active_note_names());
-    for chord in matching_chords {
-        ui.label(chord.to_string());
+    if let Some(matching_chords) = &guitar.matching_chords {
+        for chord in matching_chords {
+            ui.label(chord.to_string());
+        }
     }
 }
