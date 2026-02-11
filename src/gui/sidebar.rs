@@ -1,9 +1,12 @@
 use eframe::egui;
 use strum::IntoEnumIterator;
+use web_sys::js_sys::Set;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
 use crate::core_state::NoteName;
 use crate::core_state::MusicalStructure;
+use crate::core_state::find_matching_chords;
+use crate::core_state::find_matching_scales;
 use crate::core_state::{Settings, Mode};
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
@@ -25,7 +28,6 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
 
     // Clear notes when switching mode
     if before_mode != settings.mode {
-        guitar.clear_notes();
         match settings.mode {
             Mode::Scale => {
                 guitar.update_notes(&settings.scale.notes());
@@ -34,10 +36,10 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
                 guitar.update_notes(&settings.chord.notes());
             },
             Mode::ReverseScale => {
-
+                guitar.clear_notes();
             },
             Mode::ReverseChord => {
-
+                guitar.clear_notes();
             },
         }
     }
@@ -67,10 +69,10 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
                 guitar.update_notes(&settings.chord.notes());
             },
             Mode::ReverseScale => {
-                guitar.clear_notes();
+                // Todo move the notes since they are on a different string index now
             },
             Mode::ReverseChord => {
-                guitar.clear_notes();
+                // Todo move the notes since they are on a different string index now
             },
         }
 
@@ -121,7 +123,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         }
     });
 
-    // Scale or chord
+    // Mode specific
     ui.add_space(10.0);
     match settings.mode {
         Mode::Scale => {
@@ -130,7 +132,12 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         Mode::Chord => {
             show_chord_settings(ui, guitar, settings);
         },
-        _ => {}
+        Mode::ReverseScale => {
+            show_reverse_scales(ui, guitar, settings);
+        },
+        Mode::ReverseChord => {
+            show_reverse_chords(ui, guitar, settings);
+        }
     }
 
 
@@ -188,4 +195,18 @@ fn show_chord_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &m
         |t| t.to_string()) {
             guitar.update_notes(&settings.chord.notes());
         }
+}
+
+fn show_reverse_scales(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+    let matching_scales = find_matching_scales(&guitar.get_active_note_names());
+    for scale in matching_scales {
+        ui.label(scale.to_string());
+    }
+}
+
+fn show_reverse_chords(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+    let matching_chords = find_matching_chords(&guitar.get_active_note_names());
+    for chord in matching_chords {
+        ui.label(chord.to_string());
+    }
 }

@@ -1,4 +1,4 @@
-use strum::EnumIter;
+use strum::{EnumIter, IntoEnumIterator};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter)]
 pub enum NoteName {
@@ -156,6 +156,7 @@ impl HasIntervals for ScaleType {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Scale {
     pub root: NoteName,
     pub scale_type: ScaleType,
@@ -164,6 +165,10 @@ pub struct Scale {
 impl Scale {
     pub fn new(root: NoteName, scale_type: ScaleType) -> Self {
         Self {root, scale_type}
+    }
+
+    pub fn to_string(&self) -> String {
+        format!{"{} {}", self.root.to_string(), self.scale_type.to_string()}
     }
 }
 
@@ -220,6 +225,7 @@ impl HasIntervals for ChordType {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Chord {
     pub root: NoteName,
     pub chord_type: ChordType,
@@ -227,8 +233,12 @@ pub struct Chord {
 }
 
 impl Chord {
-    pub fn new(root: NoteName, chord_type: ChordType, position: u8) -> Self {
-        Self { root, chord_type, position}
+    pub fn new(root: NoteName, chord_type: ChordType) -> Self {
+        Self { root, chord_type, position: 0}
+    }
+
+    pub fn to_string(&self) -> String { 
+        format!{"{} {}", self.root.to_string(), self.chord_type.to_string()}
     }
 }
 
@@ -253,6 +263,38 @@ impl MusicalStructure for Chord {
 }
 
 
+// Reverse Scales and Chords
+pub fn find_matching_scales(notes: &[NoteName]) -> Vec<Scale> {
+    let mut matching_scales: Vec<Scale> = Vec::new();
+
+    for root in notes {
+        for scale_type in ScaleType::iter() {
+            let scale = Scale::new(*root, scale_type);
+            if notes.iter().all(|note| scale.contains(*note)) {
+                matching_scales.push(scale);
+            }
+        }
+    }
+
+    matching_scales
+}
+
+pub fn find_matching_chords(notes: &[NoteName]) -> Vec<Chord> {
+    let mut matching_chords: Vec<Chord> = Vec::new();
+    
+    for root in notes {
+        for chord_type in ChordType::iter() {
+            let chord = Chord::new(*root, chord_type);
+            if notes.iter().all(|note| chord.contains(*note)) {
+                matching_chords.push(chord);
+            }
+        }
+    }
+
+    matching_chords
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,6 +314,28 @@ mod tests {
         assert_eq!(true,  scale.contains(NoteName::A));
         assert_eq!(false, scale.contains(NoteName::ASharp));
         assert_eq!(true,  scale.contains(NoteName::B));
+    }
+
+    #[test]
+    fn test_matching_scales() {
+        let c_major_scale = Scale::new(NoteName::C, ScaleType::Major);
+        let matching_scales = find_matching_scales(&c_major_scale.notes());
+        
+        // The first one should be C Major always
+        // Then it should also have a A Minor after
+        assert_eq!(Scale::new(NoteName::C, ScaleType::Major), matching_scales[0]);
+        assert_eq!(true, matching_scales.contains(&Scale::new(NoteName::A, ScaleType::Minor)));
+    }
+
+    #[test]
+    fn test_matching_chords() {
+        let c_major_chord = Chord::new(NoteName::C, ChordType::Major);
+        let matching_chords = find_matching_chords(&c_major_chord.notes());
+        
+        // The first one should be C Major always
+        // Then it should also have a A Minor after
+        assert_eq!(Chord::new(NoteName::C, ChordType::Major), matching_chords[0]);
+        assert_eq!(true, matching_chords.contains(&Chord::new(NoteName::C, ChordType::MajorSeven)));
     }
 
 

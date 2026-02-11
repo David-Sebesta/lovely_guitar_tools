@@ -165,8 +165,12 @@ impl GuitarState {
 
     // Clears all other notes on string
     pub fn set_strings_note(&mut self, string: u8, fret: u8) {
-        self.active_frets.retain(|(s, _)| *s != string);
-        self.active_frets.insert((string, fret));
+        if self.active_frets.contains(&(string, fret)) {
+            self.active_frets.remove(&(string, fret));
+        } else {
+            self.active_frets.retain(|(s, _)| *s != string);
+            self.active_frets.insert((string, fret));
+        }
     }
 
     pub fn update_notes(&mut self, notes: &Vec<NoteName>) {
@@ -194,7 +198,18 @@ impl GuitarState {
                 }
             }
         }
+    }
 
+    // Returns a list of active note names
+    pub fn get_active_note_names(&self) -> Vec<NoteName> {
+        let mut note_names: Vec<NoteName> = Vec::new();
+        for (string, fret) in &self.active_frets {
+            let note = self.get_note_on_fretboard(*string, *fret);
+            if !note_names.contains(&note.name) {
+                note_names.push(note.name);
+            }
+        }
+        note_names
     }
 
 
