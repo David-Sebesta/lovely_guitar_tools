@@ -68,11 +68,8 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
             Mode::Chord => {
                 guitar.update_notes(&settings.chord.notes());
             },
-            Mode::ReverseScale => {
-                // Todo move the notes since they are on a different string index now
-            },
-            Mode::ReverseChord => {
-                // Todo move the notes since they are on a different string index now
+            Mode::ReverseScale | Mode::ReverseChord => {
+                guitar.shift_notes(guitar.config.num_strings as i8 - before_strings as i8);
             },
         }
 

@@ -1,7 +1,7 @@
 use std::{collections::HashSet, ops::Index};
-use crate::core_state::music_theory::MusicalStructure;
+use crate::core_state::{find_matching_scales, find_matching_chords, music_theory::MusicalStructure};
 
-use super::music_theory::{Note, NoteName, Scale};
+use super::music_theory::{Note, NoteName, Scale, Chord};
 
 
 #[derive(Clone, PartialEq)]
@@ -131,6 +131,8 @@ pub struct GuitarState {
     pub config: GuitarConfig,
     pub active_frets: HashSet<(u8, u8)>, // String to fret
     pub active_note: Option<Note>,
+    pub matching_scales: Option<Vec<Scale>>,
+    pub matching_chords: Option<Vec<Chord>>,
 }
 
 impl GuitarState {
@@ -138,7 +140,9 @@ impl GuitarState {
         Self {
             config: GuitarConfig::standard_6_string(),
             active_frets: HashSet::new(),
-            active_note: Option::None,
+            active_note: None,
+            matching_scales: None,
+            matching_chords: None,
         }
     }
 
@@ -153,6 +157,7 @@ impl GuitarState {
 
     pub fn clear_notes(&mut self) {
         self.active_frets.clear();
+        self.update_matching_structures();
     }
 
     pub fn toggle_note(&mut self, string: u8, fret: u8) {
@@ -161,6 +166,7 @@ impl GuitarState {
         } else {
             self.active_frets.insert((string, fret));
         }
+        self.update_matching_structures();
     }
 
     // Clears all other notes on string
@@ -171,6 +177,7 @@ impl GuitarState {
             self.active_frets.retain(|(s, _)| *s != string);
             self.active_frets.insert((string, fret));
         }
+        self.update_matching_structures();
     }
 
     pub fn update_notes(&mut self, notes: &Vec<NoteName>) {
@@ -210,6 +217,34 @@ impl GuitarState {
             }
         }
         note_names
+    }
+
+    pub fn update_matching_structures(&mut self) {
+        let active_notes = self.get_active_note_names();
+        if active_notes.is_empty() {
+            self.matching_scales = None;
+            self.matching_chords = None;
+        } else {
+            self.matching_scales = Some(find_matching_scales(&active_notes));
+            self.matching_chords = Some(find_matching_chords(&active_notes));
+        }
+    }
+
+    // When changing number of strings
+    pub fn shift_notes(&mut self, shift: i8) {
+        let mut new_frets = HashSet::new();
+        for (string, fret) in &self.active_frets {
+            if shift >= 0 {
+                new_frets.insert((*string + shift as u8, *fret));
+            } else {
+                let shift_abs = -(shift) as u8;
+                if *string >= shift_abs{
+                    new_frets.insert((*string + shift_abs, *fret));
+                }
+            }
+        }
+        self.active_frets = new_frets;
+        self.update_matching_structures();
     }
 
 
