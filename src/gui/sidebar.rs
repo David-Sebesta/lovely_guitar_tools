@@ -1,12 +1,9 @@
 use eframe::egui;
 use strum::IntoEnumIterator;
-use web_sys::js_sys::Set;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
 use crate::core_state::NoteName;
 use crate::core_state::MusicalStructure;
-use crate::core_state::find_matching_chords;
-use crate::core_state::find_matching_scales;
 use crate::core_state::{Settings, Mode};
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
@@ -194,7 +191,7 @@ fn show_chord_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &m
         }
 }
 
-fn show_reverse_scales(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+fn show_reverse_scales(ui: &mut egui::Ui, guitar: &mut GuitarState, _settings: &mut Settings) {
     if let Some(matching_scales) = &guitar.matching_scales {
         for scale in matching_scales {
             ui.label(scale.to_string());
@@ -202,7 +199,7 @@ fn show_reverse_scales(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &m
     }
 }
 
-fn show_reverse_chords(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+fn show_reverse_chords(ui: &mut egui::Ui, guitar: &mut GuitarState, _settings: &mut Settings) {
     if let Some(matching_chords) = &guitar.matching_chords {
         for chord in matching_chords {
             ui.label(chord.to_string());
