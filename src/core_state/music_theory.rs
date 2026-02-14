@@ -245,6 +245,19 @@ impl Scale {
     pub fn to_string(&self) -> String {
         format!{"{} {}", self.root.to_string(), self.scale_type.to_string()}
     }
+
+    pub fn get_notes(&self) -> Vec<Note> {
+        let mut notes = Vec::new();
+
+        for note_name in self.notes() {
+            notes.push(Note::new(note_name, 4));
+        }
+        notes.push(Note::new(self.notes()[0], 5));
+
+        notes
+    }
+
+
 }
 
 impl Default for Scale {

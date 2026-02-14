@@ -2,15 +2,19 @@ use eframe::egui;
 use wasm_bindgen::prelude::*;
 use web_sys::{AudioContext, OscillatorType};
 
+use crate::{audio_engine::AudioEngine, core_state::{Chord, MusicalStructure, Scale}};
+
 pub mod core_state;
 mod gui;
+mod audio_engine;
+
 
 #[cfg(test)]
 mod tests;
 
 #[wasm_bindgen]
 pub struct LovelyGuitarToolsApp {
-    ctx: Option<AudioContext>,
+    audio_engine: AudioEngine,
     // States
     guitar_state: core_state::GuitarState,
     settings: core_state::Settings,
@@ -23,7 +27,7 @@ pub struct LovelyGuitarToolsApp {
 impl Default for LovelyGuitarToolsApp {
     fn default() -> Self {
         Self { 
-            ctx: None,
+            audio_engine: AudioEngine::new(),
             guitar_state: core_state::GuitarState::new(),
             settings: core_state::Settings::new(),
 
@@ -58,22 +62,42 @@ impl eframe::App for LovelyGuitarToolsApp {
 
 impl LovelyGuitarToolsApp {
     fn play_test_tone(&mut self) {
-        // Initialize context on first click (browsers block auto-audio)
-        if self.ctx.is_none() {
-            self.ctx = Some(AudioContext::new().unwrap());
-        }
+        // // Initialize context on first click (browsers block auto-audio)
+        // if self.ctx.is_none() {
+        //     self.ctx = Some(AudioContext::new().unwrap());
+        // }
         
-        if let Some(ref audio_ctx) = self.ctx && let Some(active_note) = self.guitar_state.active_note {
-            let osc = audio_ctx.create_oscillator().unwrap();
-            osc.set_type(OscillatorType::Sine);
-            osc.frequency().set_value(active_note.frequency()); // A4
+        // if let Some(ref audio_ctx) = self.ctx && let Some(active_note) = self.guitar_state.active_note {
+        //     let osc = audio_ctx.create_oscillator().unwrap();
+        //     osc.set_type(OscillatorType::Sine);
+        //     osc.frequency().set_value(active_note.frequency()); // A4
             
-            osc.connect_with_audio_node(&audio_ctx.destination()).unwrap();
-            osc.start().unwrap();
+        //     osc.connect_with_audio_node(&audio_ctx.destination()).unwrap();
+        //     osc.start().unwrap();
             
-            // Stop after 0.5 seconds
-            let _ = osc.stop_with_when(audio_ctx.current_time() + 0.5);
+        //     // Stop after 0.5 seconds
+        //     let _ = osc.stop_with_when(audio_ctx.current_time() + 0.5);
+        // }
+
+        match self.settings.mode {
+            core_state::Mode::Scale => {
+                self.audio_engine.play_scale(&self.settings.scale.get_notes(), true);
+            },
+            core_state::Mode::Chord => {
+
+            },
+            core_state::Mode::ReverseScale => {
+
+            },
+            core_state::Mode::ReverseChord => {
+
+            }
         }
+
+        // if let Some(active_note) = self.guitar_state.active_note {
+        //     self.audio_engine.play_note(&active_note);
+        // }
+
     }
 }
 
