@@ -121,12 +121,21 @@ fn draw_fretboard(painter: &Painter, layout: &FretboardLayout) {
 
     // Draw background
     painter.rect_filled(layout.rect, 2.0, Color32::from_rgb(60, 40, 30));
+    
+    draw_frets(painter, layout);
+    draw_inlays(painter, layout);
+    draw_strings(painter, layout);
 
+    
+
+}
+
+fn draw_frets(painter: &Painter, layout: &FretboardLayout) {
     // Draw 0 fret
     painter.line_segment(
         [Pos2::new(layout.rect.min.x + layout.fret_width, layout.rect.min.y), 
                 Pos2::new(layout.rect.min.x + layout.fret_width, layout.rect.max.y)], 
-        Stroke::new(4.0, Color32::from_rgb(0, 0, 0)));
+        Stroke::new(6.0, Color32::from_rgb(0, 0, 0)));
 
     // Draw frets
     for i in 2..=layout.num_frets {
@@ -135,7 +144,33 @@ fn draw_fretboard(painter: &Painter, layout: &FretboardLayout) {
             [Pos2::new(x, layout.rect.min.y), Pos2::new(x, layout.rect.max.y)], 
             Stroke::new(2.0, Color32::from_rgb(180, 180, 180)));
     }
+}
 
+fn draw_inlays(painter: &Painter, layout: &FretboardLayout) {
+
+    let y_center = layout.rect.center().y;
+    let y_quarter = layout.rect.y_range().span() * 0.25;
+
+    // Single dot 3, 5, 7, 9, 15, 17, 19, 21
+    let single_dot_frets: [u8; 8] = [3, 5, 7, 9, 15, 17, 19, 21].map(|x: u8| x + 1);
+    for fret in single_dot_frets {
+        let x = layout.rect.min.x + (fret as f32 * layout.fret_width) - layout.fret_width * 0.5;
+        painter.circle_filled(Pos2::new(x, y_center), 10.0, Color32::WHITE);
+    }
+
+    // Double dot 12, 24
+    let double_dot_frets: [u8; 2] = [12, 24].map(|x: u8| x + 1);
+    for fret in double_dot_frets {
+        let x = layout.rect.min.x + (fret as f32 * layout.fret_width) - layout.fret_width * 0.5;
+        painter.circle_filled(Pos2::new(x, layout.rect.min.y + y_quarter), 10.0, Color32::WHITE);
+        painter.circle_filled(Pos2::new(x, layout.rect.min.y + y_quarter * 3.0), 10.0, Color32::WHITE);
+    }
+
+
+
+}
+
+fn draw_strings(painter: &Painter, layout: &FretboardLayout) {
     // Draw strings 
     for i in 0..=layout.num_strings {
         let y = layout.string_start_y + (i as f32 * layout.string_height);
@@ -164,7 +199,6 @@ fn draw_fretboard(painter: &Painter, layout: &FretboardLayout) {
         );
 
     }
-
 }
 
 fn draw_active_notes(painter: &Painter, layout: &FretboardLayout, guitar: &GuitarState) {

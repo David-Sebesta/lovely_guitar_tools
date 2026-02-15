@@ -48,8 +48,8 @@ impl eframe::App for LovelyGuitarToolsApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Main Content");
             ui.separator();
-            if ui.button("Play Test Tone").clicked() {
-                self.play_test_tone();
+            if ui.button("Play").clicked() {
+                self.play_mode_tone();
             }
 
             ui.separator();
@@ -61,7 +61,7 @@ impl eframe::App for LovelyGuitarToolsApp {
 }
 
 impl LovelyGuitarToolsApp {
-    fn play_test_tone(&mut self) {
+    fn play_mode_tone(&mut self) {
         // // Initialize context on first click (browsers block auto-audio)
         // if self.ctx.is_none() {
         //     self.ctx = Some(AudioContext::new().unwrap());
