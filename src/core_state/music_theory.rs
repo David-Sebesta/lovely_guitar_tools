@@ -116,6 +116,13 @@ pub trait MusicalStructure {
             NoteName::from_u8(note_val as u8)
         }).collect()
     }
+
+    fn get_notes(&self, root_octave: i8) -> Vec<Note> {
+        let root_note = Note::new(self.root(), root_octave);
+        self.intervals().iter().map(|&interval| {
+            root_note.add_semitones(interval)
+        }).collect()
+    }
     
     fn contains(&self, note: NoteName) -> bool {
         self.notes().contains(&note)
@@ -245,18 +252,6 @@ impl Scale {
     pub fn to_string(&self) -> String {
         format!{"{} {}", self.root.to_string(), self.scale_type.to_string()}
     }
-
-    pub fn get_notes(&self) -> Vec<Note> {
-        let mut notes = Vec::new();
-
-        for note_name in self.notes() {
-            notes.push(Note::new(note_name, 4));
-        }
-        notes.push(Note::new(self.notes()[0], 5));
-
-        notes
-    }
-
 
 }
 
@@ -448,6 +443,31 @@ mod tests {
         // Then it should also have a A Minor after
         assert_eq!(Chord::new(NoteName::C, ChordType::Major), matching_chords[0]);
         assert_eq!(true, matching_chords.contains(&Chord::new(NoteName::C, ChordType::MajorSeven)));
+    }
+
+    #[test]
+    fn test_get_notes() {
+        // C Major Scale: C4, D4, E4, F4, G4, A4, B4
+        let c_major_scale = Scale::new(NoteName::C, ScaleType::Major);
+        let notes = c_major_scale.get_notes(4);
+        assert_eq!(notes.len(), 7);
+        assert_eq!(notes[0], Note::new(NoteName::C, 4));
+        assert_eq!(notes[1], Note::new(NoteName::D, 4));
+        assert_eq!(notes[6], Note::new(NoteName::B, 4));
+
+        // C Major Chord: C4, E4, G4
+        let c_major_chord = Chord::new(NoteName::C, ChordType::Major);
+        let notes = c_major_chord.get_notes(4);
+        assert_eq!(notes.len(), 3);
+        assert_eq!(notes[0], Note::new(NoteName::C, 4));
+        assert_eq!(notes[1], Note::new(NoteName::E, 4));
+        assert_eq!(notes[2], Note::new(NoteName::G, 4));
+
+        // B Major Scale: B4, C#5, D#5, E5, F#5, G#5, A#5
+        let b_major_scale = Scale::new(NoteName::B, ScaleType::Major);
+        let notes = b_major_scale.get_notes(4);
+        assert_eq!(notes[0], Note::new(NoteName::B, 4));
+        assert_eq!(notes[1], Note::new(NoteName::CSharp, 5)); 
     }
 
 

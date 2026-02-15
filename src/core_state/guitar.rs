@@ -219,6 +219,20 @@ impl GuitarState {
         note_names
     }
 
+    // Returns a list of active notes based on frets
+    pub fn get_active_notes(&self) -> Vec<Note> {
+        let mut notes = Vec::new();
+        let mut active_frets_ordered: Vec<_> = self.active_frets.clone().into_iter().collect();
+
+        active_frets_ordered.sort_by_key(|fret| fret.0);
+        for (string, fret) in active_frets_ordered {
+            notes.push(self.get_note_on_fretboard(string, fret));
+        }
+
+        notes
+
+    }
+
     pub fn update_matching_structures(&mut self) {
         let active_notes = self.get_active_note_names();
         if active_notes.is_empty() {

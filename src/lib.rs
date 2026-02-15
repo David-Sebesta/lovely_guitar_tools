@@ -81,16 +81,23 @@ impl LovelyGuitarToolsApp {
 
         match self.settings.mode {
             core_state::Mode::Scale => {
-                self.audio_engine.play_scale(&self.settings.scale.get_notes(), true);
+                let mut notes = self.settings.scale.get_notes(4);
+                if let Some(n) = notes.first().map(|n| n.add_semitones(12)) {
+                    notes.push(n);
+                }
+                self.audio_engine.play_scale(&notes, true);
             },
             core_state::Mode::Chord => {
+                let notes = self.settings.chord.get_notes(4);
+                self.audio_engine.play_chord(&notes);
 
             },
             core_state::Mode::ReverseScale => {
 
             },
             core_state::Mode::ReverseChord => {
-
+                let notes = self.guitar_state.get_active_notes();
+                self.audio_engine.play_chord(&notes);
             }
         }
 

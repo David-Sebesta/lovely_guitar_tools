@@ -86,7 +86,7 @@ impl AudioEngine {
 
         // Schedule start and stop
         osc.start_with_when(t)?;
-        osc.stop_with_when(t + duration);
+        osc.stop_with_when(t + duration)?;
 
         Ok(())
 
