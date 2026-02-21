@@ -107,7 +107,7 @@ impl AudioEngine {
 
         if let Some(ctx) = &self.ctx {
             let now = ctx.current_time();
-            let strum_speed = 0.03; // 30ms
+            let strum_speed = 0.01; // 30ms
 
             for (i, note) in notes.iter().enumerate() {
                 let start_time = now + (i as f64 * strum_speed);

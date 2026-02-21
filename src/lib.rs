@@ -39,18 +39,20 @@ impl eframe::App for LovelyGuitarToolsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         gui::header::show(ctx);
 
-        egui::SidePanel::left("left_panel")
-            .min_width(280.0)
-            .show(ctx, |ui| {
-            gui::sidebar::show(ui, &mut self.guitar_state, &mut self.settings);
-        });
+        // egui::SidePanel::left("left_panel")
+        //     .min_width(280.0)
+        //     .show(ctx, |ui| {
+        //     gui::sidebar::show(ui, &mut self.guitar_state, &mut self.settings);
+        // });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("Main Content");
-            ui.separator();
-            if ui.button("Play").clicked() {
-                self.play_mode_tone();
-            }
+            // ui.label("Main Content");
+            // ui.separator();
+            // if ui.button("Play").clicked() {
+            //     self.play_mode_tone();
+            // }
+
+            gui::settings_panel::show(ui, &mut self.guitar_state, &mut self.settings);
 
             ui.separator();
 
