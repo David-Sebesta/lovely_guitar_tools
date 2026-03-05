@@ -1,4 +1,5 @@
 use strum::{EnumIter, IntoEnumIterator};
+use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter)]
 pub enum NoteName {
@@ -249,10 +250,16 @@ impl Scale {
         Self {root, scale_type}
     }
 
-    pub fn to_string(&self) -> String {
-        format!{"{} {}", self.root.to_string(), self.scale_type.to_string()}
-    }
+    // pub fn to_string(&self) -> String {
+    //     format!{"{} {}", self.root.to_string(), self.scale_type.to_string()}
+    // }
 
+}
+
+impl fmt::Display for Scale {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}", self.root.to_string(), self.scale_type.to_string())
+    }
 }
 
 impl Default for Scale {
@@ -346,6 +353,12 @@ impl Chord {
 
     pub fn to_string(&self) -> String { 
         format!{"{} {}", self.root.to_string(), self.chord_type.to_string()}
+    }
+}
+
+impl fmt::Display for Chord {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}", self.root.to_string(), self.chord_type.to_string())
     }
 }
 

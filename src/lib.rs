@@ -58,6 +58,10 @@ impl eframe::App for LovelyGuitarToolsApp {
 
             gui::fretboard::show(ui, &mut self.guitar_state, &self.settings);
 
+            ui.separator();
+
+            gui::details::show(ui, &mut self.guitar_state, &mut self.settings);
+
         });
     }
 }

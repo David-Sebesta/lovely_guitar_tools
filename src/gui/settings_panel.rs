@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::RichText;
 use strum::IntoEnumIterator;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
@@ -13,30 +14,10 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         .inner_margin(egui::Margin::symmetric(20, 10))
         .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    let total_width = ui.available_width();
-            
-                    // Left
-                    ui.allocate_ui_with_layout(egui::vec2(total_width / 3.0, ui.available_height()), 
-                    egui::Layout::left_to_right(egui::Align::Center), 
-                    |ui| {
-                        show_guitar_settings(ui, guitar, settings);
-                    });
-            
-                    // Center
-                    ui.allocate_ui_with_layout(egui::vec2(total_width / 3.0, ui.available_height()), 
-                    egui::Layout::left_to_right(egui::Align::Center), 
-                    |ui| {
-                        show_mode_settings(ui, guitar, settings);
-                        show_root_notes(ui, guitar, settings);
-                    });
-            
-                    // Right
-                    ui.allocate_ui_with_layout(egui::vec2(total_width / 3.0, ui.available_height()), 
-                    egui::Layout::right_to_left(egui::Align::Center), 
-                    |ui| {
-                        show_play_button(ui, guitar, settings);
-                    });
-            
+
+                    show_guitar_settings(ui, guitar, settings);
+                    show_mode_settings(ui, guitar, settings);
+                    show_root_notes(ui, guitar, settings);
             
                 });
 
@@ -45,7 +26,6 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
 
 
 fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    
     egui::Frame::new()
     .stroke(ui.visuals().widgets.noninteractive.bg_stroke) 
     .corner_radius(4.0) 
@@ -160,54 +140,78 @@ fn show_mode_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mu
     .corner_radius(4.0) 
     .inner_margin(8.0) 
     .show(ui, |ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-            // Chord/Scale
-            ui.allocate_ui_with_layout(
-                egui::vec2(80.0, ui.available_height()), 
-                egui::Layout::top_down(egui::Align::Center),
+        // Calculate the exact width of your two columns plus the gap between them
+        let total_width = 80.0 + 60.0 + ui.spacing().item_spacing.x;
+        
+        // Force the entire block to exactly this width, centering everything inside it
+        ui.allocate_ui_with_layout(
+            egui::vec2(total_width, ui.available_height()), 
+            egui::Layout::top_down(egui::Align::Center),
             |ui| {
-                    ui.label(egui::RichText::new("CHORD").strong());
-                    toggle_switch(ui, &mut mode_switch, true);
-                    ui.label(egui::RichText::new("SCALE").strong());
-            });
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                    // Chord/Scale
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(80.0, ui.available_height()), 
+                        egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                            ui.label(egui::RichText::new("CHORD").strong());
+                            toggle_switch(ui, &mut mode_switch, true);
+                            ui.label(egui::RichText::new("SCALE").strong());
+                    });
+        
+                    // Reverse
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(60.0, ui.available_height()), 
+                        egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                            ui.label(egui::RichText::new("REVERSE").strong());
+                            toggle_switch(ui, &mut reverse_switch, true);
+                            ui.add_space(12.0);
+                    });
+                });
 
-            // Reverse
-            ui.allocate_ui_with_layout(
-                egui::vec2(60.0, ui.available_height()), 
-                egui::Layout::top_down(egui::Align::Center),
-            |ui| {
-                    ui.label(egui::RichText::new("REVERSE").strong());
-                    toggle_switch(ui, &mut reverse_switch, true);
-                    ui.add_space(12.0);
-            });
+                // Update logic. I already made it so Mode has all four modes and I'm not going to refactor everything
+                // to split it up into Chord/Scale and Reverse, so I'm going to just use this match statement
+                let new_mode = match (mode_switch, reverse_switch) {
+                    (true, true)   => Mode::ReverseChord,
+                    (true, false)  => Mode::Chord,
+                    (false, true)  => Mode::ReverseScale,
+                    (false, false) => Mode::Scale,
+                };
+            
+                if new_mode != settings.mode {
+                    // New mode
+                    settings.mode = new_mode;
+                    match settings.mode {
+                        Mode::Chord => {
+                            guitar.update_notes(&settings.chord.notes());
+                        },
+                        Mode::Scale => {
+                            guitar.update_notes(&settings.scale.notes());
+                        },
+                        _ => { guitar.clear_notes(); }
+                    }
+
+                }
+                
+                // Wrap the label in a centered layout
+                ui.label(RichText::new(settings.mode.to_string()).size(16.0).strong());
+            
         });
     });
 
-    // Update logic. I already made it so Mode has all four modes and I'm not going to refactor everything
-    // to split it up into Chord/Scale and Reverse, so I'm going to just use this match statement
-    let new_mode = match (mode_switch, reverse_switch) {
-        (true, true)   => Mode::ReverseChord,
-        (true, false)  => Mode::Chord,
-        (false, true)  => Mode::ReverseScale,
-        (false, false) => Mode::Scale,
-    };
-
-    if new_mode != settings.mode {
-        // New mode
-        settings.mode = new_mode;
-    }
 
 }
 
 fn show_root_notes(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
     
-    let mut current_root = if settings.mode == Mode::Chord || settings.mode == Mode::ReverseChord {
-        &mut settings.chord.root 
+    let mut current_root_value = if settings.mode == Mode::Chord || settings.mode == Mode::ReverseChord {
+        settings.chord.root 
     } else { 
-        &mut settings.scale.root 
+        settings.scale.root 
     };
 
-    let before_root = *current_root;
+    let before_root = current_root_value;
 
     let button_width = 30.0;
     
@@ -228,33 +232,87 @@ fn show_root_notes(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut S
                     for root_note in NoteName::iter() {
                         let label = root_note.to_string();
 
-                        let is_selected = *current_root == root_note;
+                        let is_selected = current_root_value == root_note;
 
                         if ui.add_sized(
                             egui::vec2(button_width, 24.0),
                             egui::Button::selectable(is_selected, label)
                         ).clicked() {
-                            *current_root = root_note;
+                            current_root_value = root_note;
                             // TODO: Maybe make a sound later
                         }
 
                     }
                 });
+
+                show_mode_specific(ui, guitar, settings);
+                
             }
         );
     });
 
-    if before_root != *current_root {
+    if before_root != current_root_value {
         // Changed root
         match settings.mode {
             Mode::Chord => {
-
+                settings.chord.root = current_root_value;
+                guitar.update_notes(&settings.chord.notes());
             },
             Mode::Scale => {
-
+                settings.scale.root = current_root_value;
+                guitar.update_notes(&settings.scale.notes());
             },
             _ => {}
         }
 
     }
+}
+
+fn show_mode_specific(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+    match settings.mode {
+        Mode::Chord => {
+            if show_scale_or_chord_type_selector(ui,  "Chord Type", 
+                &mut settings.chord.chord_type, |t| t.to_string()) {
+                    guitar.update_notes(&settings.chord.notes());
+            }
+        },
+        Mode::Scale => {
+            if show_scale_or_chord_type_selector(ui, "Scale Type", 
+                &mut settings.scale.scale_type, |t| t.to_string()) {
+                    guitar.update_notes(&settings.scale.notes());
+            }
+        },
+        Mode::ReverseChord | Mode::ReverseScale => {
+            if ui.button("Clear Notes").clicked() {
+                guitar.clear_notes();
+            }
+        }
+    }
+}
+
+fn show_scale_or_chord_type_selector<T> ( 
+    ui: &mut egui::Ui,
+    label_type: &str, 
+    structure_type: &mut T,
+    get_name: impl Fn(&T) -> &str,
+) -> bool
+where T: IntoEnumIterator + PartialEq + Copy {
+
+    let before_type = *structure_type;
+    
+    ui.vertical_centered_justified(|ui| {
+        ui.label(RichText::new(label_type).size(16.0).strong());
+        egui::ComboBox::from_id_salt("cs_type_box")
+        .selected_text(get_name(&before_type))
+        .show_ui(ui, |ui| {
+            for t in T::iter() {
+                let name = get_name(&t).to_string();
+                ui.vertical_centered_justified(|ui| {
+                    ui.selectable_value(structure_type, t, name);
+                });
+            }
+        });
+    });
+
+    before_type != *structure_type
 }
