@@ -117,7 +117,7 @@ where
 
     guitar.clear_greyed_notes();
 
-    egui::ScrollArea::horizontal().show(ui, |ui| {
+    egui::ScrollArea::vertical().show(ui, |ui| {
         if let Some(list) = items {
             for item in list {
                 let button = ui.button(RichText::new(item.to_string()).size(16.0));

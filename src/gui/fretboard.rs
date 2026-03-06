@@ -81,8 +81,13 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings, au
     let num_frets: u8 = guitar.config.num_frets;
     let num_strings = guitar.config.num_strings;
 
+    // Calculate minimum required width so it triggers horizontal scroll on small screens
+    let min_fret_width = 40.0;
+    let required_width = (num_frets as f32 + 1.0) * min_fret_width;
+    let actual_width = ui.available_width().max(required_width);
+
     // Allocate space
-    let desired_size = Vec2::new(ui.available_width(), (num_strings as f32 * 30.0) + 30.0);
+    let desired_size = Vec2::new(actual_width, (num_strings as f32 * 30.0) + 30.0);
     let (rect , response) = ui.allocate_exact_size(desired_size, Sense::click());
 
     let mut layout_rect = rect;
