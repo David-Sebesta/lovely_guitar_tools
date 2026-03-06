@@ -7,8 +7,8 @@ A Rust-based guitar tool built with `egui` and compiling to WebAssembly.
 ## Features
 
 -   **Interactive Fretboard**: Visualize notes, scales, and chords on a dynamic fretboard.
--   **Audio Playback (Not Done Yet)**: Simple Web Audio integration for play-testing tones.
--   **Experimental Modes**: Includes modes for reverse scale and chord lookup.
+-   **Audio Playback**: Listen to chords and scales.
+-   **Reverse Scales and Chords**: Includes modes for reverse scale and chord lookup.
 -   **Customizable**: Adjust settings for different tunings and string configurations.
 
 ## Prerequisites
