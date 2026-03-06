@@ -4,6 +4,8 @@
 
 A Rust-based guitar tool built with `egui` and compiling to WebAssembly.
 
+Try it here https://david-sebesta.github.io/lovely_guitar_tools/
+
 ## Features
 
 -   **Interactive Fretboard**: Visualize notes, scales, and chords on a dynamic fretboard.
@@ -31,10 +33,6 @@ trunk serve
 
 This will build the project and serve it at `http://127.0.0.1:8080` (or another port if 8080 is taken). The server supports hot-reloading.
 
-## Building for Release
-
-To build the project for production (output will be in the `dist` directory):
-
-```sh
-trunk build --release
-```
+## Future Work
+-   Update UI
+-   Add more info in the details section
