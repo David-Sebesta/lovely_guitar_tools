@@ -1,8 +1,7 @@
 use eframe::egui;
 use wasm_bindgen::prelude::*;
-use web_sys::{AudioContext, OscillatorType};
 
-use crate::{audio_engine::AudioEngine, core_state::{Chord, MusicalStructure, Scale}};
+use crate::{audio_engine::AudioEngine, core_state::MusicalStructure};
 
 pub mod core_state;
 mod gui;
@@ -67,7 +66,7 @@ impl eframe::App for LovelyGuitarToolsApp {
 }
 
 impl LovelyGuitarToolsApp {
-    fn play_mode_tone(&mut self) {
+    fn _play_mode_tone(&mut self) {
         // // Initialize context on first click (browsers block auto-audio)
         // if self.ctx.is_none() {
         //     self.ctx = Some(AudioContext::new().unwrap());

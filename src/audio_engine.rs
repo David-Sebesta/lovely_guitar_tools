@@ -1,23 +1,22 @@
 use egui::util::id_type_map::TypeId;
-use web_sys::{AudioContext, AudioContextState, OscillatorType, GainNode,
-                BiquadFilterNode, BiquadFilterType, OscillatorNode};
+use web_sys::{AudioContext, OscillatorType, BiquadFilterType};
 use wasm_bindgen::JsValue;
 use crate::core_state::{MusicalStructure, music_theory::Note, Scale, Chord};
 
 pub struct AudioEngine {
     ctx: Option<AudioContext>,
-    metronome_active: bool,
-    bpm: u32,
-    next_click_time: f64,
+    _metronome_active: bool,
+    _bpm: u32,
+    _next_click_time: f64,
 }
 
 impl Default for AudioEngine {
     fn default() -> Self {
         Self {
             ctx: None,
-            metronome_active: false,
-            bpm: 120,
-            next_click_time: 0.0,
+            _metronome_active: false,
+            _bpm: 120,
+            _next_click_time: 0.0,
         }
     }
 }
@@ -41,10 +40,6 @@ impl AudioEngine {
             }
         }
         Ok(())
-    }
-
-    pub fn is_ready(&self) -> bool {
-        self.ctx.is_some()
     }
 
     fn play_frequency(&self, freq: f32, start_time: f64, duration: f64) -> Result<(), JsValue> {

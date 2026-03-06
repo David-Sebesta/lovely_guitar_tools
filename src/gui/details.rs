@@ -1,13 +1,9 @@
 use crate::AudioEngine;
 use crate::core_state::GuitarState;
 use crate::core_state::MusicalStructure;
-use crate::core_state::NoteName;
-use crate::core_state::Tuning;
 use crate::core_state::{Mode, Settings};
 use eframe::egui;
 use egui::RichText;
-use egui::scroll_area;
-use strum::IntoEnumIterator;
 use std::fmt::Display;
 
 pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings, audio_engine: &mut AudioEngine) {
@@ -28,7 +24,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         });
 }
 
-fn show_chord_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+fn show_chord_details(ui: &mut egui::Ui, _guitar: &mut GuitarState, settings: &mut Settings) {
     ui.horizontal(|ui| {
         ui.label(RichText::new("Notes:").strong());
 
@@ -57,7 +53,7 @@ fn show_chord_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mu
     });
 }
 
-fn show_scale_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+fn show_scale_details(ui: &mut egui::Ui, _guitar: &mut GuitarState, settings: &mut Settings) {
     ui.horizontal(|ui| {
         ui.label(RichText::new("Notes:").strong());
 

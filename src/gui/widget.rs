@@ -1,6 +1,4 @@
 use eframe::egui;
-use egui::response;
-
 
 pub fn toggle_switch(ui: &mut egui::Ui, on: &mut bool, vertical: bool) -> egui::Response {
 
@@ -22,7 +20,7 @@ pub fn toggle_switch(ui: &mut egui::Ui, on: &mut bool, vertical: bool) -> egui::
     let how_on = ui.ctx().animate_bool(response.id, *on);
 
     if ui.is_rect_visible(rect) {
-        let visuals = ui.style().interact_selectable(&response, *on);
+        let _visuals = ui.style().interact_selectable(&response, *on);
         let radius = if vertical {
             0.5 * rect.width()
         } else {
