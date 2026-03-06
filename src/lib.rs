@@ -52,15 +52,15 @@ impl eframe::App for LovelyGuitarToolsApp {
             //     self.play_mode_tone();
             // }
 
-            gui::settings_panel::show(ui, &mut self.guitar_state, &mut self.settings);
+            gui::settings_panel::show(ui, &mut self.guitar_state, &mut self.settings, &mut self.audio_engine);
 
             ui.separator();
 
-            gui::fretboard::show(ui, &mut self.guitar_state, &self.settings);
+            gui::fretboard::show(ui, &mut self.guitar_state, &self.settings, &mut self.audio_engine);
 
             ui.separator();
 
-            gui::details::show(ui, &mut self.guitar_state, &mut self.settings);
+            gui::details::show(ui, &mut self.guitar_state, &mut self.settings, &mut self.audio_engine);
 
         });
     }
@@ -88,10 +88,7 @@ impl LovelyGuitarToolsApp {
         match self.settings.mode {
             core_state::Mode::Scale => {
                 let mut notes = self.settings.scale.get_notes(4);
-                if let Some(n) = notes.first().map(|n| n.add_semitones(12)) {
-                    notes.push(n);
-                }
-                self.audio_engine.play_scale(&notes, true);
+                self.audio_engine.play_scale(&mut notes, true, true);
             },
             core_state::Mode::Chord => {
                 let notes = self.settings.chord.get_notes(4);

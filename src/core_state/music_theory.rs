@@ -351,9 +351,9 @@ impl Chord {
         Self { root, chord_type, position: 0}
     }
 
-    pub fn to_string(&self) -> String { 
-        format!{"{} {}", self.root.to_string(), self.chord_type.to_string()}
-    }
+    // pub fn to_string(&self) -> String { 
+    //     format!{"{} {}", self.root.to_string(), self.chord_type.to_string()}
+    // }
 }
 
 impl fmt::Display for Chord {

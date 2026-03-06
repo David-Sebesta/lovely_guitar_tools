@@ -1,6 +1,8 @@
 use eframe::egui;
 use egui::RichText;
 use strum::IntoEnumIterator;
+use crate::audio_engine;
+use crate::audio_engine::AudioEngine;
 use crate::core_state::GuitarState;
 use crate::core_state::Tuning;
 use crate::core_state::NoteName;
@@ -8,7 +10,7 @@ use crate::core_state::MusicalStructure;
 use crate::core_state::{Settings, Mode};
 use crate::gui::widget::toggle_switch;
 
-pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings, audio_engine: &mut AudioEngine) {
 
     egui::Frame::new()
         .inner_margin(egui::Margin::symmetric(20, 10))
@@ -18,6 +20,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
                     show_guitar_settings(ui, guitar, settings);
                     show_mode_settings(ui, guitar, settings);
                     show_root_notes(ui, guitar, settings);
+                    show_play_button(ui, guitar, settings, audio_engine);
             
                 });
 
@@ -32,8 +35,10 @@ fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &
     .inner_margin(8.0) 
     .show(ui, |ui| {
     
+        let mut updated_tuning = false;
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
+
                 // Number of strings
                 let before_num_strings = guitar.config.num_strings;
                 ui.vertical(|ui| {
@@ -54,15 +59,16 @@ fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &
                     }
                     match settings.mode {
                         Mode::Scale => {
-                            guitar.update_notes(&settings.scale.notes());
+                            guitar.update_notes(&settings.scale.notes(), true);
                         },
                         Mode::Chord => {
-                            guitar.update_notes(&settings.chord.notes());
+                            guitar.update_notes(&settings.chord.notes(), true);
                         },
                         Mode::ReverseScale | Mode::ReverseChord => {
                             guitar.shift_notes(guitar.config.num_strings as i8 - before_num_strings as i8);
                         },
                     }
+                    updated_tuning = true;
                 }
 
                 ui.add_space(20.0);
@@ -91,7 +97,12 @@ fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &
                             }
                         });
                     });
+                    
+                    if before_tuning != guitar.config.current_tuning {
+                        updated_tuning = true;
+                    }
             });
+
 
             ui.add_space(10.0);
 
@@ -102,6 +113,7 @@ fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &
                         if ui.button("⬆").clicked() {
                             *note = note.add_semitones(1);
                             guitar.config.current_tuning.name = "Custom Tuning".to_string();
+                            updated_tuning = true;
                         }
 
                         ui.label(format!("{}{}", note.name.to_string(), note.octave.to_string()));
@@ -109,12 +121,17 @@ fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &
                         if ui.button("⬇").clicked() {
                             *note = note.add_semitones(-1);
                             guitar.config.current_tuning.name = "Custom Tuning".to_string();
+                            updated_tuning = true;
                         }
 
                     });
                 }
             });
         });
+
+        if updated_tuning {
+            guitar.update_matching_structures();
+        }
     
     });
     
@@ -122,8 +139,34 @@ fn show_guitar_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &
 }
 
 
-fn show_play_button(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+fn show_play_button(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings, audio_engine: &mut AudioEngine) {
+    egui::Frame::new()
+    .stroke(ui.visuals().widgets.noninteractive.bg_stroke) 
+    .corner_radius(4.0) 
+    .inner_margin(8.0) 
+    .show(ui, |ui| {
 
+        ui.style_mut().spacing.button_padding = egui::vec2(40.0, 5.0);
+
+        let button = ui.button(RichText::new("Play").size(48.0).strong());
+        if button.clicked() {
+            match settings.mode {
+                Mode::Chord => {
+                    audio_engine.play_chord(&settings.chord.get_notes(3));
+                },
+                Mode::ReverseChord => {
+                    audio_engine.play_chord(&guitar.get_active_notes());
+                },
+                Mode::Scale => {
+                    audio_engine.play_scale(&mut settings.scale.get_notes(3), true, true);
+                },
+                Mode::ReverseScale => {
+                    audio_engine.play_scale(&mut guitar.get_active_notes(), true, false);
+                },
+            }
+        }
+
+    });
 }
 
 
@@ -184,12 +227,14 @@ fn show_mode_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mu
                     settings.mode = new_mode;
                     match settings.mode {
                         Mode::Chord => {
-                            guitar.update_notes(&settings.chord.notes());
+                            guitar.update_notes(&settings.chord.notes(), true);
+                            guitar.clear_greyed_notes();
                         },
                         Mode::Scale => {
-                            guitar.update_notes(&settings.scale.notes());
+                            guitar.update_notes(&settings.scale.notes(), true);
+                            guitar.clear_greyed_notes();
                         },
-                        _ => { guitar.clear_notes(); }
+                        _ => { guitar.clear_all_notes(); }
                     }
 
                 }
@@ -256,11 +301,11 @@ fn show_root_notes(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut S
         match settings.mode {
             Mode::Chord => {
                 settings.chord.root = current_root_value;
-                guitar.update_notes(&settings.chord.notes());
+                guitar.update_notes(&settings.chord.notes(), true);
             },
             Mode::Scale => {
                 settings.scale.root = current_root_value;
-                guitar.update_notes(&settings.scale.notes());
+                guitar.update_notes(&settings.scale.notes(), true);
             },
             _ => {}
         }
@@ -273,13 +318,13 @@ fn show_mode_specific(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mu
         Mode::Chord => {
             if show_scale_or_chord_type_selector(ui,  "Chord Type", 
                 &mut settings.chord.chord_type, |t| t.to_string()) {
-                    guitar.update_notes(&settings.chord.notes());
+                    guitar.update_notes(&settings.chord.notes(), true);
             }
         },
         Mode::Scale => {
             if show_scale_or_chord_type_selector(ui, "Scale Type", 
                 &mut settings.scale.scale_type, |t| t.to_string()) {
-                    guitar.update_notes(&settings.scale.notes());
+                    guitar.update_notes(&settings.scale.notes(), true);
             }
         },
         Mode::ReverseChord | Mode::ReverseScale => {

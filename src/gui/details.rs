@@ -1,3 +1,4 @@
+use crate::AudioEngine;
 use crate::core_state::GuitarState;
 use crate::core_state::MusicalStructure;
 use crate::core_state::NoteName;
@@ -9,7 +10,7 @@ use egui::scroll_area;
 use strum::IntoEnumIterator;
 use std::fmt::Display;
 
-pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
+pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings, audio_engine: &mut AudioEngine) {
     egui::Frame::new()
         .inner_margin(egui::Margin::symmetric(20, 10))
         .show(ui, |ui| {
@@ -20,8 +21,8 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
                 match settings.mode {
                     Mode::Chord => show_chord_details(ui, guitar, settings),
                     Mode::Scale => show_scale_details(ui, guitar, settings),
-                    Mode::ReverseChord => show_reverse_chord_details(ui, guitar, settings),
-                    Mode::ReverseScale => show_reverse_scale_details(ui, guitar, settings),
+                    Mode::ReverseChord => show_reverse_chord_details(ui, guitar, settings, audio_engine),
+                    Mode::ReverseScale => show_reverse_scale_details(ui, guitar, settings, audio_engine),
                 }
             });
         });
@@ -85,19 +86,23 @@ fn show_scale_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mu
     });
 }
 
-fn show_reverse_chord_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    if let Some(chord) = show_selectable_list(ui, "Possible Chords", &guitar.matching_chords) {
+fn show_reverse_chord_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings, audio_engine: &mut AudioEngine) {
+    let possible_chords = guitar.matching_chords.clone();
+
+    if let Some(chord) = show_selectable_list(ui, "Possible Chords", &possible_chords, guitar, audio_engine) {
         settings.mode = Mode::Chord;
         settings.chord = chord;
-        guitar.update_notes(&settings.chord.notes());
+        guitar.update_notes(&settings.chord.notes(), true);
     }
 }
 
-fn show_reverse_scale_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings) {
-    if let Some(scale) = show_selectable_list(ui, "Possible Scales", &guitar.matching_scales) {
+fn show_reverse_scale_details(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings, audio_engine: &mut AudioEngine) {
+    let possible_scales = guitar.matching_scales.clone();
+
+    if let Some(scale) = show_selectable_list(ui, "Possible Scales", &possible_scales, guitar, audio_engine) {
         settings.mode = Mode::Scale;
         settings.scale = scale;
-        guitar.update_notes(&settings.scale.notes());
+        guitar.update_notes(&settings.scale.notes(), true);
     }
 }
 
@@ -105,18 +110,30 @@ fn show_selectable_list<T>(
     ui: &mut egui::Ui,
     title: &str,
     items: &Option<Vec<T>>,
+    guitar: &mut GuitarState,
+    audio_engine: &mut AudioEngine,
 ) -> Option<T>
 where
-    T: Display + Clone, // Tells Rust "T must have .to_string() and .clone()"
+    T: Display + Clone + MusicalStructure + 'static, // Tells Rust "T must have .to_string() and .clone()"
 {
     ui.label(RichText::new(title).size(18.0));
     let mut selected_item = None;
 
-    egui::ScrollArea::vertical().show(ui, |ui| {
+    guitar.clear_greyed_notes();
+
+    egui::ScrollArea::horizontal().show(ui, |ui| {
         if let Some(list) = items {
             for item in list {
-                if ui.button(RichText::new(item.to_string()).size(16.0)).clicked() {
+                let button = ui.button(RichText::new(item.to_string()).size(16.0));
+                if button.clicked() {
                     selected_item = Some(item.clone());
+                } else if button.secondary_clicked() {
+                    audio_engine.play_musical_structure(item);
+                }
+                
+                // Show greyed out notes on fretboard
+                if button.hovered() {
+                    guitar.update_notes(&item.notes(), false);
                 }
             }
         }

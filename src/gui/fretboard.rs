@@ -1,6 +1,7 @@
 use eframe::egui;
 use egui::{Align2, FontFamily, FontId, Sense};
 use egui::{Color32, Painter, Pos2, Rect, Stroke, Vec2};
+use crate::audio_engine::{self, AudioEngine};
 use crate::core_state::GuitarState;
 use crate::core_state::{Settings, Mode};
 
@@ -75,16 +76,18 @@ impl FretboardLayout {
 
 }
 
-pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
+pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings, audio_engine: &mut AudioEngine) {
     // 25 since there is a 0 fret (open string)
     let num_frets: u8 = guitar.config.num_frets;
     let num_strings = guitar.config.num_strings;
 
     // Allocate space
-    let desired_size = Vec2::new(ui.available_width(), (num_strings as f32) * 30.0);
+    let desired_size = Vec2::new(ui.available_width(), (num_strings as f32 * 30.0) + 30.0);
     let (rect , response) = ui.allocate_exact_size(desired_size, Sense::click());
 
-    let layout = FretboardLayout::new(rect, num_strings, num_frets);
+    let mut layout_rect = rect;
+    layout_rect.min.y += 30.0;
+    let layout = FretboardLayout::new(layout_rect, num_strings, num_frets);
 
     // Handle clicks
     if response.clicked() {
@@ -94,10 +97,14 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
             let note = guitar.get_note_on_fretboard(string, fret);
             match settings.mode {
                 Mode::ReverseScale => {
-                    guitar.toggle_note(string, fret);
+                    if guitar.toggle_note(string, fret) {
+                        audio_engine.play_note(&guitar.get_note_on_fretboard(string, fret));
+                    }
                 },
                 Mode::ReverseChord => {
-                    guitar.set_strings_note(string, fret);
+                    if guitar.set_strings_note(string, fret) {
+                        audio_engine.play_note(&guitar.get_note_on_fretboard(string, fret));
+                    }
                 },
                 _ => {}
             }
@@ -108,6 +115,7 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &Settings) {
     }
 
     let painter = ui.painter_at(rect);
+    draw_fret_numbers(&painter, &layout, rect.min.y);
     draw_fretboard(&painter, &layout);
     draw_active_notes(&painter, &layout, guitar);
 
@@ -172,7 +180,7 @@ fn draw_inlays(painter: &Painter, layout: &FretboardLayout) {
 
 fn draw_strings(painter: &Painter, layout: &FretboardLayout) {
     // Draw strings 
-    for i in 0..=layout.num_strings {
+    for i in 0..layout.num_strings {
         let y = layout.string_start_y + (i as f32 * layout.string_height);
         // Make lower strings thicker
         let thickness = 1.0 + (i as f32 * 0.5);
@@ -202,10 +210,11 @@ fn draw_strings(painter: &Painter, layout: &FretboardLayout) {
 }
 
 fn draw_active_notes(painter: &Painter, layout: &FretboardLayout, guitar: &GuitarState) {
-
     const RADIUS: f32 = 14.0;
-    let circle_color = Color32::LIGHT_YELLOW;
+    let circle_color = Color32::from_rgba_unmultiplied(240, 240, 240, 255);
+    let greyed_color = Color32::from_rgba_unmultiplied(220, 220, 220, 128);
     let text_color = Color32::BLACK;
+
 
     for (string, fret) in guitar.active_frets.iter() {
         let hitbox = layout.get_hitbox_rect(*string, *fret);
@@ -215,6 +224,30 @@ fn draw_active_notes(painter: &Painter, layout: &FretboardLayout, guitar: &Guita
         painter.text(hitbox.center(), Align2::CENTER_CENTER, note.to_string(), 
                     FontId::new(16.0, FontFamily::default()), text_color);
 
+    }
+
+    for (string, fret) in guitar.greyed_frets.iter() {
+        let hitbox = layout.get_hitbox_rect(*string, *fret);
+        let note = guitar.get_note_on_fretboard(*string, *fret);
+
+        painter.circle_filled(hitbox.center(), RADIUS, greyed_color);
+        painter.text(hitbox.center(), Align2::CENTER_CENTER, note.to_string(), 
+                    FontId::new(16.0, FontFamily::default()), text_color);
+
+    }
+
+
+}
+
+fn draw_fret_numbers(painter: &Painter, layout: &FretboardLayout, top_y: f32) {
+    for f in 0..=layout.num_frets {
+        let x_center = layout.rect.min.x + (f as f32 + 0.5) * layout.fret_width;
+        painter.text(
+            Pos2::new(x_center, top_y + 15.0), 
+            Align2::LEFT_CENTER,
+            f.to_string(), 
+            FontId::new(16.0, FontFamily::default()), 
+            Color32::WHITE);
     }
 }
 

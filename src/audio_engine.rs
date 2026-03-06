@@ -1,7 +1,8 @@
+use egui::util::id_type_map::TypeId;
 use web_sys::{AudioContext, AudioContextState, OscillatorType, GainNode,
                 BiquadFilterNode, BiquadFilterType, OscillatorNode};
 use wasm_bindgen::JsValue;
-use crate::core_state::music_theory::Note;
+use crate::core_state::{MusicalStructure, music_theory::Note, Scale, Chord};
 
 pub struct AudioEngine {
     ctx: Option<AudioContext>,
@@ -117,10 +118,16 @@ impl AudioEngine {
         }
     }
 
-    pub fn play_scale(&mut self, notes: &[Note], ascending: bool) {
+    pub fn play_scale(&mut self, notes: &mut Vec<Note>, ascending: bool, add_octave: bool) {
         if let Err(_) = self.init() { return; }
 
         if let Some(ctx) = &self.ctx {
+            if add_octave {
+                if let Some(n) = notes.first().map(|n| n.add_semitones(12)) {
+                    notes.push(n);
+                }
+            }
+
             let now = ctx.current_time();
             let note_duration = 0.2;
 
@@ -135,6 +142,18 @@ impl AudioEngine {
                 let start_time = now + (i as f64 * note_duration);
                 let _ = self.play_frequency(note.frequency(), start_time, 0.6);
             }
+        }
+    }
+
+    pub fn play_musical_structure<T>(&mut self, musical_structure: &T) 
+        where T: MusicalStructure + 'static, {
+        let mut notes = musical_structure.get_notes(3);
+
+        let type_id = TypeId::of::<T>();
+        if type_id == TypeId::of::<Scale>() {
+            self.play_scale(&mut notes, true, true);
+        } else if type_id == TypeId::of::<Chord>() {
+            self.play_chord(&notes);
         }
     }
 

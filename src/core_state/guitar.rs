@@ -133,6 +133,7 @@ pub struct GuitarState {
     pub active_note: Option<Note>,
     pub matching_scales: Option<Vec<Scale>>,
     pub matching_chords: Option<Vec<Chord>>,
+    pub greyed_frets: HashSet<(u8, u8)>, 
 }
 
 impl GuitarState {
@@ -143,6 +144,7 @@ impl GuitarState {
             active_note: None,
             matching_scales: None,
             matching_chords: None,
+            greyed_frets: HashSet::new(),
         }
     }
 
@@ -160,34 +162,55 @@ impl GuitarState {
         self.update_matching_structures();
     }
 
-    pub fn toggle_note(&mut self, string: u8, fret: u8) {
+    pub fn clear_greyed_notes(&mut self) {
+        self.greyed_frets.clear();
+    }
+
+    pub fn clear_all_notes(&mut self) {
+        self.clear_notes();
+        self.clear_greyed_notes();
+    }
+
+    pub fn toggle_note(&mut self, string: u8, fret: u8) -> bool {
+        let mut note_on = false;
         if self.active_frets.contains(&(string, fret)) {
             self.active_frets.remove(&(string, fret));
         } else {
             self.active_frets.insert((string, fret));
+            note_on = true;
         }
         self.update_matching_structures();
+        note_on
     }
 
     // Clears all other notes on string
-    pub fn set_strings_note(&mut self, string: u8, fret: u8) {
+    pub fn set_strings_note(&mut self, string: u8, fret: u8) -> bool {
+        let mut note_on = false;
         if self.active_frets.contains(&(string, fret)) {
             self.active_frets.remove(&(string, fret));
         } else {
             self.active_frets.retain(|(s, _)| *s != string);
             self.active_frets.insert((string, fret));
+            note_on = true;
         }
         self.update_matching_structures();
+        note_on
     }
 
-    pub fn update_notes(&mut self, notes: &Vec<NoteName>) {
-        self.clear_notes();
+    pub fn update_notes(&mut self, notes: &Vec<NoteName>, is_active: bool) {
+        if is_active {
+            self.clear_all_notes();
+        }
  
         for string in 0..self.config.num_strings {
             for fret in 0..=self.config.num_frets {
                 let note = self.get_note_on_fretboard(string, fret);
                 if notes.contains(&note.name) {
-                    self.active_frets.insert((string, fret));
+                    if is_active {
+                        self.active_frets.insert((string, fret));
+                    } else if !self.active_frets.contains(&(string, fret)) {
+                        self.greyed_frets.insert((string, fret));
+                    }
                 }
             }
         }
@@ -253,7 +276,7 @@ impl GuitarState {
             } else {
                 let shift_abs = -(shift) as u8;
                 if *string >= shift_abs{
-                    new_frets.insert((*string + shift_abs, *fret));
+                    new_frets.insert((*string - shift_abs, *fret));
                 }
             }
         }

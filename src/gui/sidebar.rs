@@ -27,10 +27,10 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
     if before_mode != settings.mode {
         match settings.mode {
             Mode::Scale => {
-                guitar.update_notes(&settings.scale.notes());
+                guitar.update_notes(&settings.scale.notes(), true);
             },
             Mode::Chord => {
-                guitar.update_notes(&settings.chord.notes());
+                guitar.update_notes(&settings.chord.notes(), true);
             },
             Mode::ReverseScale => {
                 guitar.clear_notes();
@@ -60,10 +60,10 @@ pub fn show(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &mut Settings
         }
         match settings.mode {
             Mode::Scale => {
-                guitar.update_notes(&settings.scale.notes());
+                guitar.update_notes(&settings.scale.notes(), true);
             },
             Mode::Chord => {
-                guitar.update_notes(&settings.chord.notes());
+                guitar.update_notes(&settings.chord.notes(), true);
             },
             Mode::ReverseScale | Mode::ReverseChord => {
                 guitar.shift_notes(guitar.config.num_strings as i8 - before_strings as i8);
@@ -178,7 +178,7 @@ fn show_scale_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &m
     if show_scale_or_chord_selector(ui, "Root Note", "Scale Type", 
         &mut settings.scale.root, &mut settings.scale.scale_type,
         |t| t.to_string()) {
-            guitar.update_notes(&settings.scale.notes());
+            guitar.update_notes(&settings.scale.notes(), true);
         }
 }
 
@@ -187,7 +187,7 @@ fn show_chord_settings(ui: &mut egui::Ui, guitar: &mut GuitarState, settings: &m
     if show_scale_or_chord_selector(ui, "Root Note", "Chord Type", 
         &mut settings.chord.root, &mut settings.chord.chord_type,
         |t| t.to_string()) {
-            guitar.update_notes(&settings.chord.notes());
+            guitar.update_notes(&settings.chord.notes(), true);
         }
 }
 
