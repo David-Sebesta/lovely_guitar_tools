@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Lovely Guitar Tools</title>
+        <base href="/lovely_guitar_tools/" />
+        
+<script type="module">
+import init, * as bindings from '/lovely_guitar_tools/lovely_guitar-ded86c5a4f0ad6ea.js';
+const wasm = await init({ module_or_path: '/lovely_guitar_tools/lovely_guitar-ded86c5a4f0ad6ea_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+            }
+            #the_canvas_id {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    <link rel="modulepreload" href="/lovely_guitar_tools/lovely_guitar-ded86c5a4f0ad6ea.js" crossorigin="anonymous" integrity="sha384-evljLaQ00Y+DwNBJUc6I5SElOm6w/YHLtaSkb1PUxOsbMKjLYf0I73N+quwcn7IV"><link rel="preload" href="/lovely_guitar_tools/lovely_guitar-ded86c5a4f0ad6ea_bg.wasm" crossorigin="anonymous" integrity="sha384-OHQPXiOhXe5DgSAV+XE3cZ2MrAtg9UVI8gPN0ut3WGWScpxMWg3hpXGQ/nq41wVQ" as="fetch" type="application/wasm"></head>
+    <body>
+        <canvas id="the_canvas_id"></canvas>
+    </body>
+</html>
